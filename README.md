@@ -22,23 +22,58 @@ integrated environments.
 Note: This image can be used with other programming languages as well, as long
 as they have a framework similar to go-dockertest
 
-## Build
+## MCVS-IntegrationTest-Service
+
+### Build
 
 ```zsh
 docker build -t mcvs-integrationtest-services .
 ```
 
-## Run
+### Run
 
 ```zsh
 docker run -p 9999:1323 -it mcvs-integrationtest-services
 ```
 
-## Test
+### Test
 
 ```zsh
 curl \
   -X POST http://localhost:9999/authorization/users \
   -H "Content-Type: application/json" \
   -d '{"action":"listLabels","email":"something@example.com","facility":"a","group":"a","name":"someName"}'
+```
+
+## MCVS-Stub-Server
+
+A simple HTTP server which can configure endpoints with a given response. This can be used as a stub server to mimick behaviour of other services.
+
+### Build
+
+```zsh
+docker build -t stub-server --build-arg APPLICATION=mcvs-stub-server .
+```
+
+### Run
+
+```zsh
+docker run -p 8080:8080 stub-server
+```
+
+### Test
+
+**Configuring**
+```
+curl --location 'localhost:8080/configure' \
+--header 'Content-Type: application/json' \
+--data '{
+    "path": "/foo",
+    "response": {"foo": "bar"}
+}'
+```
+
+**Hit a configured endpoint**
+```
+curl --location 'localhost:8080/foo'
 ```

@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"sync"
@@ -62,7 +61,6 @@ func (h *handler) configure(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Response is required", http.StatusBadRequest)
 		return
 	}
-	fmt.Println("HIIII", request.Response)
 	h.mu.Lock()
 	h.endpoints[request.Path] = request.Response
 	h.mu.Unlock()
