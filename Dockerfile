@@ -6,15 +6,15 @@ ENV CGO_ENABLED=0 \
     GOOS=linux
 ARG APPLICATION
 WORKDIR /app
-COPY . .
 RUN apk update && \
     apk add \
       --no-cache \
         ca-certificates=~20240705-r0 \
         git=~2 \
         tzdata=~2024 && \
-    update-ca-certificates && \
-    go mod download && \
+    update-ca-certificates
+COPY . .
+RUN go mod download && \
     go build \
       -a \
       -installsuffix cgo \
