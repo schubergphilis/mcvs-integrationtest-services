@@ -16,6 +16,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Println("server closed")
 }
 
 type handler struct {
@@ -62,17 +63,14 @@ func (h *handler) configure(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.mu.Lock()
+	defer h.mu.Unlock()
 	h.endpoints[request.Path] = request.Response
-	h.mu.Unlock()
 
 	w.WriteHeader(http.StatusOK)
 }
 
 func (h *handler) catchAll(w http.ResponseWriter, r *http.Request) {
-	h.mu.RLock()
 	response, exists := h.endpoints[r.URL.Path]
-	h.mu.RUnlock()
-
 	if !exists {
 		http.NotFound(w, r)
 		return
@@ -80,6 +78,7 @@ func (h *handler) catchAll(w http.ResponseWriter, r *http.Request) {
 
 	b, err := json.Marshal(response)
 	if err != nil {
+		log.Default().Println("Failed to marshal response:", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
