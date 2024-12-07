@@ -1,11 +1,14 @@
 ARG APPLICATION=mcvs-integrationtest-services
 
 FROM golang:1.23.3-alpine AS builder
+ARG APPLICATION
 ENV CGO_ENABLED=0 \
     GOARCH=amd64 \
     GOOS=linux
-ARG APPLICATION
 WORKDIR /app
+# By installing OS packages and updates in a separate Docker layer, developers
+# can prevent redundant execution during each Docker image build, significantly
+# accelerating the development process.
 RUN apk update && \
     apk add \
       --no-cache \
@@ -13,9 +16,14 @@ RUN apk update && \
         git=~2 \
         tzdata=~2024 && \
     update-ca-certificates
+# By copying go.mod and go.sum files in a separate step and running go mod
+# download right after, the Dockerfile ensures that dependency resolution and
+# downloading are cached, thereby avoiding repeated downloads and expediting
+# subsequent builds if only source code changes occur.
+COPY go.mod go.sum ./
+RUN go mod download
 COPY . .
-RUN go mod download && \
-    go build \
+RUN go build \
       -a \
       -installsuffix cgo \
       -o main \
