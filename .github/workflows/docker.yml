@@ -11,10 +11,18 @@ permissions:
   packages: write
 jobs:
   mcvs-docker-action:
-    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        build-args:
+          - mcvs-integrationtest-services
+          - mcvs-stub-server
+    runs-on: ubuntu-22.04
+    #
     steps:
       - uses: actions/checkout@v4.2.2
-      - uses: schubergphilis/mcvs-docker-action@v0.5.6
+      - uses: schubergphilis/mcvs-docker-action@96-docker-build-arg
         with:
+          build-args: ${{ matrix.build-args }}
+          images: ghcr.io/${{ github.repository }}/${{ matrix.build-args }}
           dockle-accept-key: curl,HOME,libcrypto3,libssl3,PATH
           token: ${{ secrets.GITHUB_TOKEN }}
