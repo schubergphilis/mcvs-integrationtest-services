@@ -3,8 +3,8 @@ module schubergphilis/mcvs-integrationtest-services
 go 1.23.3
 
 require (
-	github.com/labstack/echo/v4 v4.12.0
-	github.com/stretchr/testify v1.8.4
+	github.com/labstack/echo/v4 v4.13.0
+	github.com/stretchr/testify v1.10.0
 )
 
 require (
