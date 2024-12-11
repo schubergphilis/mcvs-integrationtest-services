@@ -1,6 +1,6 @@
 module schubergphilis/mcvs-integrationtest-services
 
-go 1.23.3
+go 1.23.4
 
 require (
 	github.com/labstack/echo/v4 v4.13.0
