@@ -1,6 +1,6 @@
 ARG APPLICATION=mcvs-integrationtest-services
 
-FROM golang:1.23.3-alpine AS builder
+FROM golang:1.23.4-alpine AS builder
 ARG APPLICATION
 ENV CGO_ENABLED=0 \
     GOARCH=amd64 \
@@ -10,9 +10,10 @@ WORKDIR /app
 # can prevent redundant execution during each Docker image build, significantly
 # accelerating the development process.
 RUN apk update && \
+    apk upgrade && \
     apk add \
       --no-cache \
-        ca-certificates=~20240705-r0 \
+        ca-certificates=~20241010 \
         git=~2 \
         tzdata=~2024 && \
     update-ca-certificates
