@@ -12,6 +12,7 @@ import (
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 
+	"schubergphilis/mcvs-integrationtest-services/internal/pkg/constants"
 	"schubergphilis/mcvs-integrationtest-services/internal/pkg/dockertestutils"
 )
 
@@ -45,13 +46,23 @@ func (r *Resource) WithLogger(writer io.Writer) *Resource {
 }
 
 // Start starts the resource with given run options.
-func (r *Resource) Start(opts *dockertest.RunOptions, contextDir string, hcOpts ...func(*docker.HostConfig)) error {
+func (r *Resource) Start(opts *dockertest.RunOptions, _ string, hcOpts ...func(*docker.HostConfig)) error {
 	opts.Networks = append(opts.Networks, r.network)
 	var err error
+	projectRoot, err := constants.FindProjectRoot()
+	if err != nil {
+		return fmt.Errorf("failed to determine the root of the project: %w", err)
+	}
+	buildArgs := []docker.BuildArg{
+		{
+			Name:  "APPLICATION",
+			Value: "oktamock",
+		},
+	}
 	r.resource, err = r.pool.BuildAndRunWithBuildOptions(&dockertest.BuildOptions{
-		Dockerfile: "./okta/Dockerfile",
-		ContextDir: contextDir,
-		BuildArgs:  []docker.BuildArg{},
+		Dockerfile: "./Dockerfile",
+		ContextDir: projectRoot,
+		BuildArgs:  buildArgs,
 	}, opts, hcOpts...)
 	if err != nil {
 		return fmt.Errorf("unable to build okta mock server container: %w", err)
