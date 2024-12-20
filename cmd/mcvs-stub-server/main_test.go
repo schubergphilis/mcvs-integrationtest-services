@@ -10,6 +10,19 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestHealthHandler(t *testing.T) {
+	// given
+	handler := newHandler()
+
+	// when
+	httptestRecorder := httptest.NewRecorder()
+	httptestRequest := httptest.NewRequest("GET", "/health", nil)
+
+	// then
+	handler.health(httptestRecorder, httptestRequest)
+	assert.Equal(t, http.StatusOK, httptestRecorder.Code)
+}
+
 func TestResetHandler(t *testing.T) {
 	// given
 	handler := newHandler()
