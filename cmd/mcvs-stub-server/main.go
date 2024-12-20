@@ -9,6 +9,7 @@ import (
 
 func main() {
 	h := newHandler()
+	http.HandleFunc("/health", h.reset)
 	http.HandleFunc("/reset", h.reset)
 	http.HandleFunc("/configure", h.configure)
 	http.HandleFunc("/", h.catchAll)
@@ -28,6 +29,10 @@ func newHandler() *handler {
 	return &handler{
 		endpoints: map[string]any{},
 	}
+}
+
+func (h *handler) health(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
 }
 
 func (h *handler) reset(w http.ResponseWriter, r *http.Request) {
