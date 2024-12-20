@@ -9,7 +9,7 @@ import (
 
 func main() {
 	h := newHandler()
-	http.HandleFunc("/health", h.reset)
+	http.HandleFunc("/health", h.health)
 	http.HandleFunc("/reset", h.reset)
 	http.HandleFunc("/configure", h.configure)
 	http.HandleFunc("/", h.catchAll)
