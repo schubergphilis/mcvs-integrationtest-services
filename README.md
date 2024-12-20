@@ -47,7 +47,8 @@ curl \
 
 ## MCVS-Stub-Server
 
-A simple HTTP server which can configure endpoints with a given response. This can be used as a stub server to mimick behaviour of other services.
+A simple HTTP server which can configure endpoints with a given response. This
+can be used as a stub server to mimic behavior of other services.
 
 ### Build
 
@@ -64,6 +65,7 @@ docker run -p 8080:8080 stub-server
 ### Test
 
 **Configuring**
+
 ```
 curl --location 'localhost:8080/configure' \
 --header 'Content-Type: application/json' \
@@ -74,6 +76,29 @@ curl --location 'localhost:8080/configure' \
 ```
 
 **Hit a configured endpoint**
+
 ```
 curl --location 'localhost:8080/foo'
+```
+
+## Okta
+
+Generate a valid Okta JSON Web Token (JWT).
+
+### Build
+
+```zsh
+docker build -t oktamock --build-arg APPLICATION=oktamock .
+```
+
+### Run
+
+```zsh
+docker run -p 8080:8080 oktamock
+```
+
+### Test
+
+```zsh
+curl http://localhost:8080/token
 ```
