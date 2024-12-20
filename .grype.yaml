@@ -1,0 +1,6 @@
+---
+ignore:
+  # Waiting for the release of:
+  # * anchore/grype:v0.86.0
+  # * anchore/syft:v1.18.0
+  - vulnerability: GHSA-w32m-9786-jp63
