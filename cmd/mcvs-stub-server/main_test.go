@@ -108,3 +108,16 @@ func TestListHandler(t *testing.T) {
 	assert.Len(t, handler.endpoints, 2)
 	assert.Equal(t, []byte(`{"/bar":"foo","/foo":"bar"}`), httptestRecorder.Body.Bytes())
 }
+
+func TestListHandlerInvalidMethod(t *testing.T) {
+	// given
+	handler := newHandler()
+
+	// when
+	httptestRecorder := httptest.NewRecorder()
+	httptestRequest := httptest.NewRequest("POST", "/list", nil)
+
+	// then
+	handler.list(httptestRecorder, httptestRequest)
+	assert.Equal(t, http.StatusMethodNotAllowed, httptestRecorder.Code)
+}
