@@ -91,3 +91,20 @@ func TestCatchAllHandlerNotFound(t *testing.T) {
 	handler.catchAll(httptestRecorder, httptestRequest)
 	assert.Equal(t, http.StatusNotFound, httptestRecorder.Code)
 }
+
+func TestListHandler(t *testing.T) {
+	// given
+	handler := newHandler()
+	handler.endpoints["/foo"] = "bar"
+	handler.endpoints["/bar"] = "foo"
+
+	// when
+	httptestRecorder := httptest.NewRecorder()
+	httptestRequest := httptest.NewRequest("GET", "/list", nil)
+
+	// then
+	handler.list(httptestRecorder, httptestRequest)
+	assert.Equal(t, http.StatusOK, httptestRecorder.Code)
+	assert.Len(t, handler.endpoints, 2)
+	assert.Equal(t, []byte(`{"/bar":"foo","/foo":"bar"}`), httptestRecorder.Body.Bytes())
+}
