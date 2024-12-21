@@ -121,3 +121,17 @@ func TestListHandlerInvalidMethod(t *testing.T) {
 	handler.list(httptestRecorder, httptestRequest)
 	assert.Equal(t, http.StatusMethodNotAllowed, httptestRecorder.Code)
 }
+
+func TestListHandlerInvalidEndpointsMap(t *testing.T) {
+	// given
+	handler := newHandler()
+	handler.endpoints["/bad"] = func() {}
+
+	// when
+	httptestRecorder := httptest.NewRecorder()
+	httptestRequest := httptest.NewRequest("GET", "/list", nil)
+
+	// then
+	handler.list(httptestRecorder, httptestRequest)
+	assert.Equal(t, http.StatusInternalServerError, httptestRecorder.Code)
+}
