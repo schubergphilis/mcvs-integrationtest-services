@@ -12,6 +12,7 @@ func main() {
 	http.HandleFunc("/health", h.health)
 	http.HandleFunc("/reset", h.reset)
 	http.HandleFunc("/configure", h.configure)
+	http.HandleFunc("/list", h.list)
 	http.HandleFunc("/", h.catchAll)
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
@@ -84,6 +85,28 @@ func (h *handler) catchAll(w http.ResponseWriter, r *http.Request) {
 	b, err := json.Marshal(response)
 	if err != nil {
 		log.Default().Println("Failed to marshal response:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	_, err = w.Write(b)
+	if err != nil {
+		log.Default().Println("Failed to write response:", err)
+	}
+}
+
+func (h *handler) list(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
+	b, err := json.Marshal(h.endpoints)
+	if err != nil {
+		log.Default().Println("Failed to marshal endpoints:", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
