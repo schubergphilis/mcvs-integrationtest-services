@@ -1,6 +1,6 @@
-name: Build and publish Docker Registry image
-
-on:
+---
+name: docker-mcvs-registry
+"on":
   push:
     tags:
       - "*"
@@ -43,14 +43,28 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           # run local tmp registry
-          docker run -d -p 5000:5000 --name mcvs-registry-tmp registry:${{ env.REGISTRY_VERSION }}
+          docker run -d -p 5000:5000 \
+            --name mcvs-registry-tmp \
+            registry:${{ env.REGISTRY_VERSION }}
 
           # copy specififc images from specific sources
-          regctl image copy --digest-tags public.ecr.aws/datadog/agent:7.59.0 localhost:5000/datadog/agent:7.59.0
-          regctl image copy --digest-tags public.ecr.aws/nginx/nginx:1.27.0 localhost:5000/nginx/nginx:1.27.0
+          regctl \
+            image \
+            copy --digest-tags \
+            public.ecr.aws/datadog/agent:7.59.0 \
+            localhost:5000/datadog/agent:7.59.0
+
+          regctl \
+            image \
+            copy --digest-tags \
+            public.ecr.aws/nginx/nginx:1.27.0 \
+            localhost:5000/nginx/nginx:1.27.0
 
           # export images files to backup directory
-          docker cp mcvs-registry-tmp:/var/lib/registry ./${{ env.DOCKERFILE_CONTEXT }}/backup-registry
+          docker \
+            cp \
+            mcvs-registry-tmp:/var/lib/registry \
+            ./${{ env.DOCKERFILE_CONTEXT }}/backup-registry
 
           # clean up the registry container
           docker rm -f mcvs-registry-tmp
