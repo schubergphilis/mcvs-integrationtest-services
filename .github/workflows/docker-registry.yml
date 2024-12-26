@@ -1,0 +1,65 @@
+name: Build and publish Docker Registry image
+
+on:
+  push:
+    tags:
+      - "*"
+    paths:
+      - "registry/**"
+  pull_request:
+    paths:
+      - "registry/**"
+
+env:
+  REGISTRY_VERSION: 2.8.3
+  REGCTL_VERSION: 0.8.0
+  DOCKERFILE_CONTEXT: registry
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        build-args:
+          - mcvs-registry
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Install regctl
+        uses: regclient/actions/regctl-installer@main
+        with:
+          release: ${{ env.REGCTL_VERSION }}
+
+      - name: Create registry backup directory
+        run: mkdir -p ./${{ env.DOCKERFILE_CONTEXT }}/backup-registry
+
+      - name: Pull images data and prepare context directory
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          # run local tmp registry
+          docker run -d -p 5000:5000 --name mcvs-registry-tmp registry:${{ env.REGISTRY_VERSION }}
+
+          # copy specififc images from specific sources
+          regctl image copy --digest-tags public.ecr.aws/datadog/agent:7.59.0 localhost:5000/datadog/agent:7.59.0
+          regctl image copy --digest-tags public.ecr.aws/nginx/nginx:1.27.0 localhost:5000/nginx/nginx:1.27.0
+
+          # export images files to backup directory
+          docker cp mcvs-registry-tmp:/var/lib/registry ./${{ env.DOCKERFILE_CONTEXT }}/backup-registry
+
+          # clean up the registry container
+          docker rm -f mcvs-registry-tmp
+
+      - name: Run MCVS Docker Action
+        uses: schubergphilis/mcvs-docker-action@v0.6.0
+        with:
+          build-args: ${{ matrix.build-args }}
+          dockle-accept-key: "curl,HOME,libcrypto3,libssl3,PATH"
+          images: ghcr.io/${{ github.repository }}/${{ matrix.build-args }}
+          token: "${{ secrets.GITHUB_TOKEN }}"
+          # context: ${{ env.DOCKERFILE_CONTEXT }}
