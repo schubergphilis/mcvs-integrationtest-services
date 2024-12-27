@@ -48,6 +48,7 @@ jobs:
           ls -la $HOME
           ls -la $HOME/.regctl
           ls -la $HOME/.regctl/bin
+          cat $HOME/.regctl/bin
           regctl \
             image \
             copy --digest-tags \
