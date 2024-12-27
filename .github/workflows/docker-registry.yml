@@ -37,6 +37,7 @@ jobs:
       - name: Create registry backup directory
         run: mkdir -p ${{ env.DOCKERFILE_CONTEXT }}/backup-registry
       - name: Pull images data and prepare context directory
+        shell: bash
         run: |
           #!/bin/bash
           docker run -d \
