@@ -37,7 +37,6 @@ jobs:
       - name: Create registry backup directory
         run: mkdir -p ${{ env.DOCKERFILE_CONTEXT }}/backup-registry
       - name: Pull images data and prepare context directory
-        if: startsWith(github.ref, 'refs/tags/')
         shell: bash
         run: |
           #!/bin/bash
