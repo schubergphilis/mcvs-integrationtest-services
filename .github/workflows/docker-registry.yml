@@ -19,7 +19,7 @@ env:
   REGCTL_VERSION: 0.8.0
   REGISTRY_LOCAL: localhost:5000
   REGISTRY_REMOTE: public.ecr.aws
-  REGISTRY_VERSION: 2.8.3
+  REGISTRY_VERSION: 3.0.0-rc.2
 jobs:
   build-and-publish:
     runs-on: ubuntu-22.04
