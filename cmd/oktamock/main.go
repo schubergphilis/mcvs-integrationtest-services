@@ -73,6 +73,7 @@ type JWTConfig struct {
 	Issuer        string        `env:"ISSUER" envDefault:"http://localhost:8080"`
 	KID           string        `env:"KID" envDefault:"mock-kid"`
 	SigningMethod SigningMethod `env:"SIGNING_METHOD" envDefault:"RS256"`
+	Sub           string        `env:"SUB" envDefault:""`
 }
 
 // NewConfig returns the config.
@@ -109,9 +110,9 @@ func main() {
 // OktaMockServer represents a mock Okta server which can be used to create and validate JWT tokens.
 // Serves as a subtitute for using an actual Okta Server.
 type OktaMockServer struct {
-	audience, issuer string
-	expiration       time.Duration
-	groups           []string
+	audience, issuer, sub string
+	expiration            time.Duration
+	groups                []string
 
 	privKey *rsa.PrivateKey
 	jwkKey  jwk.Key
@@ -133,11 +134,12 @@ func (o *OktaMockServer) handleGetValidJWT(w http.ResponseWriter, r *http.Reques
 	now := time.Now()
 	claims := jwt.MapClaims{
 		"aud":    o.audience,
-		"iss":    o.issuer,
-		"iat":    now.Unix(),
 		"exp":    now.Add(o.expiration).Unix(),
-		"nbf":    now.AddDate(0, 0, -1).Unix(),
 		"Groups": o.groups,
+		"iat":    now.Unix(),
+		"iss":    o.issuer,
+		"nbf":    now.AddDate(0, 0, -1).Unix(),
+		"sub":    o.sub,
 	}
 
 	// Add custom claims
@@ -220,6 +222,7 @@ func NewOktaMockServer(cfg *Config) (*OktaMockServer, error) {
 		issuer:     cfg.JWTConfig.Issuer,
 		jwkKey:     jwkKey,
 		privKey:    privKeyRSA,
+		sub:        cfg.JWTConfig.Sub,
 	}, nil
 }
 

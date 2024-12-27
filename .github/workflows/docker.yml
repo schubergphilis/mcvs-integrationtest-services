@@ -16,6 +16,7 @@ jobs:
         build-args:
           - mcvs-integrationtest-services
           - mcvs-stub-server
+          - oktamock
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4.2.2
