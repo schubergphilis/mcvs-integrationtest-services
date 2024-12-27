@@ -16,7 +16,7 @@ env:
   DOCKERFILE_CONTEXT: ./registry
   IMAGE_MANIFEST_LIST: datadog/agent:7.59.0
   IMAGE_MANIFEST_SINGLE: nginx/nginx:1.27.0
-  REGCTL_VERSION: 0.8.0
+  REGCTL_VERSION: v0.8.0
   REGISTRY_LOCAL: localhost:5000
   REGISTRY_REMOTE: public.ecr.aws
   REGISTRY_VERSION: 3.0.0-rc.2
@@ -44,11 +44,7 @@ jobs:
             -p 5000:5000 \
             --name mcvs-registry-tmp \
             registry:${{ env.REGISTRY_VERSION }}
-          echo $GITHUB_PATH
-          ls -la $HOME
-          ls -la $HOME/.regctl
-          ls -la $HOME/.regctl/bin
-          cat $HOME/.regctl/bin/regctl
+
           regctl \
             image \
             copy --digest-tags \
