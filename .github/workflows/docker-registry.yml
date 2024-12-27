@@ -30,8 +30,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4.0.0
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2.0.0
       - name: Install regctl
         uses: regclient/actions/regctl-installer@main
         with:
@@ -69,11 +67,10 @@ jobs:
           # clean up the registry container
           docker rm -f mcvs-registry-tmp
 
-      - name: Run MCVS Docker Action
-        uses: schubergphilis/mcvs-docker-action@99-context
+      - uses: schubergphilis/mcvs-docker-action@99-context
         with:
           build-args: ${{ matrix.build-args }}
           context: ${{ env.DOCKERFILE_CONTEXT }}
           dockle-accept-key: "curl,HOME,libcrypto3,libssl3,PATH"
           images: ghcr.io/${{ github.repository }}/${{ matrix.build-args }}
-          token: "${{ secrets.GITHUB_TOKEN }}"
+          token: ${{ secrets.GITHUB_TOKEN }}
