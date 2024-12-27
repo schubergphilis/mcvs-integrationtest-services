@@ -38,7 +38,7 @@ jobs:
         run: mkdir -p ${{ env.DOCKERFILE_CONTEXT }}/backup-registry
       - name: Pull images data and prepare context directory
         run: |
-          # run local tmp registry
+          #!/bin/bash
           docker run -d \
             -p 5000:5000 \
             --name mcvs-registry-tmp \
@@ -66,7 +66,7 @@ jobs:
           # clean up the registry container
           docker rm -f mcvs-registry-tmp
 
-      - uses: schubergphilis/mcvs-docker-action@99-context
+      - uses: schubergphilis/mcvs-docker-action@v0.6.1
         with:
           build-args: ${{ matrix.build-args }}
           context: ${{ env.DOCKERFILE_CONTEXT }}
