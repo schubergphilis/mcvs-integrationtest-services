@@ -70,10 +70,10 @@ jobs:
           docker rm -f mcvs-registry-tmp
 
       - name: Run MCVS Docker Action
-        uses: schubergphilis/mcvs-docker-action@v0.6.0
+        uses: schubergphilis/mcvs-docker-action@99-add-input-to-modify-the-docker-context-path
         with:
           build-args: ${{ matrix.build-args }}
           dockle-accept-key: "curl,HOME,libcrypto3,libssl3,PATH"
           images: ghcr.io/${{ github.repository }}/${{ matrix.build-args }}
           token: "${{ secrets.GITHUB_TOKEN }}"
-          # context: ${{ env.DOCKERFILE_CONTEXT }}
+          context: ${{ env.DOCKERFILE_CONTEXT }}
