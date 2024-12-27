@@ -10,8 +10,12 @@ name: docker-mcvs-registry
     paths:
       - "registry/**"
 env:
-  DOCKERFILE_CONTEXT: registry
+  DOCKERFILE_CONTEXT: ./registry
+  IMAGE_MANIFEST_LIST: datadog/agent:7.59.0
+  IMAGE_MANIFEST_SINGLE: nginx/nginx:1.27.0
   REGCTL_VERSION: 0.8.0
+  REGISTRY_LOCAL: localhost:5000
+  REGISTRY_REMOTE: public.ecr.aws
   REGISTRY_VERSION: 2.8.3
 
 jobs:
@@ -36,34 +40,35 @@ jobs:
           release: ${{ env.REGCTL_VERSION }}
 
       - name: Create registry backup directory
-        run: mkdir -p ./${{ env.DOCKERFILE_CONTEXT }}/backup-registry
+        run: mkdir -p ${{ env.DOCKERFILE_CONTEXT }}/backup-registry
 
       - name: Pull images data and prepare context directory
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           # run local tmp registry
-          docker run -d -p 5000:5000 \
+          docker run -d \
+            -p 5000:5000 \
             --name mcvs-registry-tmp \
             registry:${{ env.REGISTRY_VERSION }}
 
-          # copy specififc images from specific sources
+          # copy specific images from specific registry
           regctl \
             image \
             copy --digest-tags \
-            public.ecr.aws/datadog/agent:7.59.0 \
-            localhost:5000/datadog/agent:7.59.0
+            ${{ env.REGISTRY_REMOTE }}/${{ env.IMAGE_MANIFEST_LIST }} \
+            ${{ env.REGISTRY_LOCAL }}/${{ env.IMAGE_MANIFEST_LIST }}
 
           regctl \
             image \
             copy --digest-tags \
-            public.ecr.aws/nginx/nginx:1.27.0 \
-            localhost:5000/nginx/nginx:1.27.0
+            ${{ env.REGISTRY_REMOTE }}/${{ env.IMAGE_MANIFEST_SINGLE }} \
+            ${{ env.REGISTRY_LOCAL }}/${{ env.IMAGE_MANIFEST_SINGLE }}
 
           # export images files to backup directory
           docker \
             cp \
             mcvs-registry-tmp:/var/lib/registry \
-            ./${{ env.DOCKERFILE_CONTEXT }}/backup-registry
+            ${{ env.DOCKERFILE_CONTEXT }}/backup-registry
 
           # clean up the registry container
           docker rm -f mcvs-registry-tmp
@@ -72,7 +77,7 @@ jobs:
         uses: schubergphilis/mcvs-docker-action@99-context
         with:
           build-args: ${{ matrix.build-args }}
+          context: ${{ env.DOCKERFILE_CONTEXT }}
           dockle-accept-key: "curl,HOME,libcrypto3,libssl3,PATH"
           images: ghcr.io/${{ github.repository }}/${{ matrix.build-args }}
           token: "${{ secrets.GITHUB_TOKEN }}"
-          context: ${{ env.DOCKERFILE_CONTEXT }}
