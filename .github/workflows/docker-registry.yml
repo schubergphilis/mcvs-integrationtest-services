@@ -44,8 +44,10 @@ jobs:
             -p 5000:5000 \
             --name mcvs-registry-tmp \
             registry:${{ env.REGISTRY_VERSION }}
-
-          /home/runner/.regctl/bin/regctl version
+          echo $GITHUB_PATH
+          ls -la $HOME
+          ls -la $HOME/.regctl
+          ls -la $HOME/.regctl/bin
           regctl \
             image \
             copy --digest-tags \
