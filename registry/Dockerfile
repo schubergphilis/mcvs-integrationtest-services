@@ -1,4 +1,7 @@
 FROM registry:2.8.3
+ARG APPLICATION
+RUN apk update && \
+    apk upgrade
 # A custom config file is needed to disable default cache
 # By default the cache is "blobdescriptor: inmemory"
 # The config-example.yml file of this repo disables it
