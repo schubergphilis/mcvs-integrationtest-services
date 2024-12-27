@@ -45,6 +45,8 @@ jobs:
             --name mcvs-registry-tmp \
             registry:${{ env.REGISTRY_VERSION }}
 
+          regctl registry set --tls disabled ${{ env.REGISTRY_LOCAL }}
+
           regctl \
             image \
             copy --digest-tags \
