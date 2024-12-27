@@ -4,8 +4,6 @@ log:
   fields:
     service: registry
 storage:
-  cache:
-    blobdescriptor: ""
   filesystem:
     rootdirectory: /var/lib/registry
 http:
