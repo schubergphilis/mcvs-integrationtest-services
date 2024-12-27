@@ -9,15 +9,14 @@ name: docker-mcvs-registry
   pull_request:
     paths:
       - "registry/**"
-
 env:
-  REGISTRY_VERSION: 2.8.3
-  REGCTL_VERSION: 0.8.0
   DOCKERFILE_CONTEXT: registry
+  REGCTL_VERSION: 0.8.0
+  REGISTRY_VERSION: 2.8.3
 
 jobs:
   build-and-publish:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     strategy:
       matrix:
@@ -26,10 +25,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4.0.0
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v2.0.0
 
       - name: Install regctl
         uses: regclient/actions/regctl-installer@main
@@ -70,7 +69,7 @@ jobs:
           docker rm -f mcvs-registry-tmp
 
       - name: Run MCVS Docker Action
-        uses: schubergphilis/mcvs-docker-action@99-add-input-to-modify-the-docker-context-path
+        uses: schubergphilis/mcvs-docker-action@99-context
         with:
           build-args: ${{ matrix.build-args }}
           dockle-accept-key: "curl,HOME,libcrypto3,libssl3,PATH"
