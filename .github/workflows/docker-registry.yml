@@ -29,7 +29,7 @@ jobs:
           - mcvs-registry
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4.0.0
+        uses: actions/checkout@v4.2.2
       - name: Install regctl
         uses: regclient/actions/regctl-installer@main
         with:
