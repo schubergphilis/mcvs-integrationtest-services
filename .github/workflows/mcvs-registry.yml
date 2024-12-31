@@ -97,6 +97,8 @@ jobs:
             --name mcvs-registry \
             ${{ env.IMAGE_REPO }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
-          curl --silent http://localhost:5005/v2/_catalog
+          docker ps
+
+          curl -vk http://localhost:5005/v2/_catalog
 
           docker rm --force mcvs-registry
