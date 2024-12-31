@@ -6,9 +6,11 @@ name: docker-mcvs-registry
       - "*"
     paths:
       - "registry/**"
+      - ".github/workflows/mcvs-registry.yml"
   pull_request:
     paths:
       - "registry/**"
+      - ".github/workflows/mcvs-registry.yml"
 permissions:
   contents: read
   packages: write
