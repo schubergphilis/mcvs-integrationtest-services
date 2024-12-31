@@ -102,18 +102,4 @@ jobs:
 
           curl http://localhost:5001/v2/_catalog
 
-          ls -lah ${{ env.DOCKERFILE_CONTEXT }}
-          ls -lah ${{ env.DOCKERFILE_CONTEXT }}/backup-registry
-
-          docker exec mcvs-registry \
-            ash -c 'cat /etc/docker/registry/config.yml'
-
-          docker exec mcvs-registry \
-            ash -c \
-            'cat /etc/distribution/config.yml'
-
-          docker exec mcvs-registry \
-            ash -c \
-            'ls -lah /var/lib/registry/docker/registry/v2/repositories'
-
           docker rm --force mcvs-registry
