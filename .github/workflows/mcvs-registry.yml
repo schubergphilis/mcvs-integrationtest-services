@@ -99,17 +99,17 @@ jobs:
 
           docker ps
 
-          docker exec -it mcvs-registry \
+          curl http://localhost:5001/v2/_catalog
+
+          docker exec mcvs-registry \
             ash -c 'cat /etc/docker/registry/config.yml'
 
-          docker exec -it mcvs-registry \
+          docker exec mcvs-registry \
             ash -c \
             'cat /etc/distribution/config.yml'
 
-          docker exec -it mcvs-registry \
+          docker exec mcvs-registry \
             ash -c \
             'ls -lah /var/lib/registry/docker/registry/v2/repositories'
-
-          curl http://localhost:5001/v2/_catalog
 
           docker rm --force mcvs-registry
