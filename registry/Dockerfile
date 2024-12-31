@@ -8,6 +8,6 @@ RUN apk update && \
 # https://github.com/distribution/distribution-library-image
 # File is copied to two different locations to keep
 # compatibility with registry:2.x and registry:3.x
-COPY ./config-example.yml /etc/docker/registry/config.yml
-COPY ./config-example.yml /etc/distribution/config.yml
-COPY ./backup-registry /var/lib/registry
+COPY config-example.yml /etc/docker/registry/config.yml
+COPY config-example.yml /etc/distribution/config.yml
+COPY backup-registry /var/lib/registry

@@ -90,6 +90,7 @@ jobs:
         shell: bash
         run: |
           #!/bin/bash
+
           docker images
 
           docker run -d \
@@ -100,6 +101,8 @@ jobs:
           docker ps
 
           curl http://localhost:5001/v2/_catalog
+
+          ls -lah ${{ env.DOCKERFILE_CONTEXT }}
 
           docker exec mcvs-registry \
             ash -c 'cat /etc/docker/registry/config.yml'
