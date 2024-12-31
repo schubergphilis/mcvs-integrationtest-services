@@ -13,8 +13,10 @@ permissions:
   contents: read
   packages: write
 env:
-  BUILD_IMAGE_NAME: mcvs-registry
   DOCKERFILE_CONTEXT: ./registry
+  IMAGE_NAME: mcvs-registry
+  IMAGE_REPO: ghcr.io/${{ github.repository }}
+  IMAGE_TAG: pr-${{ github.event.number }}
   IMAGE_MANIFEST_LIST: nginx/nginx:1.27.0-alpine
   IMAGE_MANIFEST_SINGLE: nginx/nginx:1.27.0-alpine-slim-amd64
   REGCTL_VERSION: v0.8.0
@@ -79,7 +81,7 @@ jobs:
           build-args: ${{ matrix.build-args }}
           context: ${{ env.DOCKERFILE_CONTEXT }}
           dockle-accept-key: "curl,HOME,libcrypto3,libssl3,PATH"
-          images: ghcr.io/${{ github.repository }}/${{ matrix.build-args }}
+          images: ${{ env.IMAGE_REPO }}/${{ matrix.build-args }}
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Get new registry catalog
         if: ${{ github.event_name == 'pull_request' }}
@@ -91,7 +93,7 @@ jobs:
           docker run -d \
             -p 5005:5000 \
             --name mcvs-registry \
-            ghcr.io/${{ github.repository }}/${{ env.BUILD_IMAGE_NAME }}:pr-${{ github.event.number }}
+            ${{ env.IMAGE_REPO }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
           curl --silent http://localhost:5005/v2/_catalog
 
