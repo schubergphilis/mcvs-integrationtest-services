@@ -104,6 +104,7 @@ jobs:
 
           ls -lah ${{ env.DOCKERFILE_CONTEXT }}
           ls -lah ${{ env.DOCKERFILE_CONTEXT }}/backup-registry
+          ls -lah ${{ env.DOCKERFILE_CONTEXT }}/backup-registry/registry
 
           docker exec mcvs-registry \
             ash -c 'cat /etc/docker/registry/config.yml'
