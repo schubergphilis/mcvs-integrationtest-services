@@ -6,16 +6,21 @@ name: docker-mcvs-registry
       - "*"
     paths:
       - "registry/**"
+      - ".github/workflows/mcvs-registry.yml"
   pull_request:
     paths:
       - "registry/**"
+      - ".github/workflows/mcvs-registry.yml"
 permissions:
   contents: read
   packages: write
 env:
   DOCKERFILE_CONTEXT: ./registry
-  IMAGE_MANIFEST_LIST: datadog/agent:7.59.0
-  IMAGE_MANIFEST_SINGLE: nginx/nginx:1.27.0
+  IMAGE_NAME: mcvs-registry
+  IMAGE_REPO: ghcr.io/${{ github.repository }}
+  IMAGE_TAG: pr-${{ github.event.number }}
+  IMAGE_MANIFEST_LIST: nginx/nginx:1.27.0-alpine
+  IMAGE_MANIFEST_SINGLE: nginx/nginx:1.27.0-alpine-slim-amd64
   REGCTL_VERSION: v0.8.0
   REGISTRY_LOCAL: localhost:5000
   REGISTRY_REMOTE: public.ecr.aws
@@ -37,11 +42,11 @@ jobs:
       - name: Create registry backup directory
         run: mkdir -p ${{ env.DOCKERFILE_CONTEXT }}/backup-registry
       - name: Pull images data and prepare context directory
-        if: startsWith(github.ref, 'refs/tags/')
         shell: bash
         run: |
           #!/bin/bash
 
+          # run local registry
           docker run -d \
             -p 5000:5000 \
             --name mcvs-registry-tmp \
@@ -67,7 +72,7 @@ jobs:
           # export images files to backup directory
           docker \
             cp \
-            mcvs-registry-tmp:/var/lib/registry \
+            mcvs-registry-tmp:/var/lib/registry/. \
             ${{ env.DOCKERFILE_CONTEXT }}/backup-registry
 
           # clean up the registry container
@@ -78,5 +83,23 @@ jobs:
           build-args: ${{ matrix.build-args }}
           context: ${{ env.DOCKERFILE_CONTEXT }}
           dockle-accept-key: "curl,HOME,libcrypto3,libssl3,PATH"
-          images: ghcr.io/${{ github.repository }}/${{ matrix.build-args }}
+          images: ${{ env.IMAGE_REPO }}/${{ matrix.build-args }}
           token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Get new registry catalog
+        if: ${{ github.event_name == 'pull_request' }}
+        shell: bash
+        run: |
+          #!/bin/bash
+
+          docker images
+
+          docker run -d \
+            -p 5001:5000 \
+            --name mcvs-registry \
+            ${{ env.IMAGE_REPO }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+
+          docker ps
+
+          curl http://localhost:5001/v2/_catalog
+
+          docker rm --force mcvs-registry
