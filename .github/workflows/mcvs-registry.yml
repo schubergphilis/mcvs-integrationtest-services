@@ -93,12 +93,23 @@ jobs:
           docker images
 
           docker run -d \
-            -p 5005:5000 \
+            -p 5001:5000 \
             --name mcvs-registry \
             ${{ env.IMAGE_REPO }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
           docker ps
 
-          curl -vk http://localhost:5005/v2/_catalog
+          docker exec -it mcvs-registry \
+            ash -c 'cat /etc/docker/registry/config.yml'
+
+          docker exec -it mcvs-registry \
+            ash -c \
+            'cat /etc/distribution/config.yml'
+
+          docker exec -it mcvs-registry \
+            ash -c \
+            'ls -lah /var/lib/registry/docker/registry/v2/repositories'
+
+          curl http://localhost:5001/v2/_catalog
 
           docker rm --force mcvs-registry
