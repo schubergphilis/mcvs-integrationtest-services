@@ -72,7 +72,7 @@ jobs:
           # export images files to backup directory
           docker \
             cp \
-            mcvs-registry-tmp:/var/lib/registry \
+            mcvs-registry-tmp:/var/lib/registry/. \
             ${{ env.DOCKERFILE_CONTEXT }}/backup-registry
 
           # clean up the registry container
@@ -104,7 +104,6 @@ jobs:
 
           ls -lah ${{ env.DOCKERFILE_CONTEXT }}
           ls -lah ${{ env.DOCKERFILE_CONTEXT }}/backup-registry
-          ls -lah ${{ env.DOCKERFILE_CONTEXT }}/backup-registry/registry
 
           docker exec mcvs-registry \
             ash -c 'cat /etc/docker/registry/config.yml'
