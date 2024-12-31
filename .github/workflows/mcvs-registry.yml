@@ -103,6 +103,7 @@ jobs:
           curl http://localhost:5001/v2/_catalog
 
           ls -lah ${{ env.DOCKERFILE_CONTEXT }}
+          ls -lah ${{ env.DOCKERFILE_CONTEXT }}/backup-registry
 
           docker exec mcvs-registry \
             ash -c 'cat /etc/docker/registry/config.yml'
