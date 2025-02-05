@@ -13,7 +13,6 @@ RUN apk update && \
     apk upgrade && \
     apk add \
       --no-cache \
-        ca-certificates=~20241010 \
         git=~2 \
         tzdata=~2024 && \
     update-ca-certificates
