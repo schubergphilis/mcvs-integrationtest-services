@@ -55,6 +55,8 @@ can be used as a stub server to mimic behavior of other services.
 ```zsh
 docker build -t stub-server --build-arg APPLICATION=mcvs-stub-server .
 ```
+**Note:**
+When building locally, the tzdata package download might fail. To fix this on your local machine, change the version in [Dockerfile:17](Dockerfile)
 
 ### Run
 
@@ -79,6 +81,16 @@ curl --location 'localhost:8080/configure' \
 
 ```
 curl --location 'localhost:8080/foo'
+```
+
+**Reset a configured endpoint**
+
+```
+curl --location 'localhost:8080/reset' \
+--header 'Content-Type: application/json' \
+--data '{
+    "path": "/foo"
+}'
 ```
 
 ## Okta
