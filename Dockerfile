@@ -14,7 +14,7 @@ RUN apk update && \
     apk add \
       --no-cache \
         git=~2 \
-        tzdata=~2024 && \
+        tzdata=~2025 && \
     update-ca-certificates
 # By copying go.mod and go.sum files in a separate step and running go mod
 # download right after, the Dockerfile ensures that dependency resolution and
