@@ -81,6 +81,16 @@ curl --location 'localhost:8080/configure' \
 curl --location 'localhost:8080/foo'
 ```
 
+**Reset a configured endpoint**
+
+```
+curl --location 'localhost:8080/reset' \
+--header 'Content-Type: application/json' \
+--data '{
+    "path": "/foo"
+}'
+```
+
 ## Okta
 
 Generate a valid Okta JSON Web Token (JWT).
