@@ -1,6 +1,6 @@
 ---
 name: Golang
-'on':
+"on":
   # required by gomod-go-version-updater to trigger this action once pr has
   # been reviewed
   pull_request_review:
@@ -27,7 +27,7 @@ jobs:
       TASK_X_REMOTE_TASKFILES: 1
     steps:
       - uses: actions/checkout@v4.2.2
-      - uses: schubergphilis/mcvs-golang-action@v0.17.0
+      - uses: schubergphilis/mcvs-golang-action@v0.17.5
         with:
           code-coverage-expected: 65.4
           golang-unit-tests-exclusions: |-
