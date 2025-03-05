@@ -1,6 +1,6 @@
 ARG APPLICATION=mcvs-integrationtest-services
 
-FROM golang:1.24.0-alpine AS builder
+FROM golang:1.24.1-alpine AS builder
 ARG APPLICATION
 ENV CGO_ENABLED=0 \
     GOARCH=amd64 \
