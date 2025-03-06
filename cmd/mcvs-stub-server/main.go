@@ -89,9 +89,8 @@ func (h *handler) catchAll(w http.ResponseWriter, r *http.Request) {
 		log.Default().Println("Endpoint not found:", r.URL.Path)
 		http.NotFound(w, r)
 		return
-	} else {
-		log.Default().Println("Endpoint found:", r.URL.Path)
 	}
+	log.Default().Println("Endpoint found:", r.URL.Path)
 
 	b, err := json.Marshal(response)
 	if err != nil {
