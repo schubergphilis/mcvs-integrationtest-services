@@ -1,9 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 )
 
@@ -76,6 +80,8 @@ func (h *handler) configure(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) catchAll(w http.ResponseWriter, r *http.Request) {
+	log.Default().Println(h.logRequestContext(r))
+
 	response, exists := h.endpoints[r.URL.Path]
 	if !exists {
 		http.NotFound(w, r)
@@ -93,6 +99,43 @@ func (h *handler) catchAll(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Default().Println("Failed to write response:", err)
 	}
+}
+
+func (h *handler) logRequestContext(r *http.Request) string {
+	var requestInfo strings.Builder
+
+	requestInfo.WriteString(fmt.Sprintf("Request Method: %s\n", r.Method))
+	requestInfo.WriteString(fmt.Sprintf("Absolute URL: %s\n", r.URL.String()))
+	requestInfo.WriteString(fmt.Sprintf("Absolute Path: %s\n", r.URL.Path))
+	requestInfo.WriteString(fmt.Sprintf("Host: %s\n", r.Host))
+	requestInfo.WriteString(fmt.Sprintf("Remote Address: %s\n", r.RemoteAddr))
+
+	requestInfo.WriteString("Headers:\n")
+	for name, values := range r.Header {
+		for _, value := range values {
+			requestInfo.WriteString(fmt.Sprintf("  %s: %s\n", name, value))
+		}
+	}
+
+	requestInfo.WriteString("Query Parameters:\n")
+	for name, values := range r.URL.Query() {
+		for _, value := range values {
+			requestInfo.WriteString(fmt.Sprintf("  %s: %s\n", name, value))
+		}
+	}
+
+	if r.Body != nil {
+		bodyBytes, err := io.ReadAll(r.Body)
+		if err != nil {
+			requestInfo.WriteString(fmt.Sprintf("Error reading request body: %v\n", err))
+		} else {
+			requestInfo.WriteString(fmt.Sprintf("Body Content:\n%s\n", string(bodyBytes)))
+			// Restore body for further processing
+			r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+		}
+	}
+
+	return requestInfo.String()
 }
 
 func (h *handler) list(w http.ResponseWriter, r *http.Request) {
