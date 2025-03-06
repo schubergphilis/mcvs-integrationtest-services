@@ -11,6 +11,8 @@ import (
 	"sync"
 )
 
+const maxBodySizeBytes = 1024 * 10 //
+
 func main() {
 	h := newHandler()
 	http.HandleFunc("/health", h.health)
@@ -80,7 +82,7 @@ func (h *handler) configure(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) catchAll(w http.ResponseWriter, r *http.Request) {
-	log.Default().Println(h.logRequestContext(r))
+	log.Default().Println(logRequestContext(r))
 
 	response, exists := h.endpoints[r.URL.Path]
 	if !exists {
@@ -101,7 +103,7 @@ func (h *handler) catchAll(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *handler) logRequestContext(r *http.Request) string {
+func logRequestContext(r *http.Request) string {
 	var requestInfo strings.Builder
 
 	requestInfo.WriteString(fmt.Sprintf("Request Method: %s\n", r.Method))
@@ -112,6 +114,10 @@ func (h *handler) logRequestContext(r *http.Request) string {
 
 	requestInfo.WriteString("Headers:\n")
 	for name, values := range r.Header {
+		if strings.EqualFold(name, "Authorization") {
+			requestInfo.WriteString(fmt.Sprintf("  %s: *****\n", name))
+			continue
+		}
 		for _, value := range values {
 			requestInfo.WriteString(fmt.Sprintf("  %s: %s\n", name, value))
 		}
@@ -125,12 +131,11 @@ func (h *handler) logRequestContext(r *http.Request) string {
 	}
 
 	if r.Body != nil {
-		bodyBytes, err := io.ReadAll(r.Body)
+		bodyBytes, err := io.ReadAll(io.LimitReader(r.Body, maxBodySizeBytes))
 		if err != nil {
 			requestInfo.WriteString(fmt.Sprintf("Error reading request body: %v\n", err))
 		} else {
 			requestInfo.WriteString(fmt.Sprintf("Body Content:\n%s\n", string(bodyBytes)))
-			// Restore body for further processing
 			r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 		}
 	}
