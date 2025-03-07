@@ -16,13 +16,12 @@ env:
   DOCKERFILE_CONTEXT: ./registry
   IMAGE_NAME: mcvs-registry
   IMAGE_REPO: ghcr.io/${{ github.repository }}
-  IMAGE_TAG: pr-${{ github.event.number }}
+  IMAGE_TAG: ${{ github.ref_name }}
   IMAGE_MANIFEST_LIST: nginx/nginx:1.27.0-alpine
   IMAGE_MANIFEST_SINGLE: nginx/nginx:1.27.0-alpine-slim-amd64
   REGCTL_VERSION: v0.8.0
   REGISTRY_LOCAL: localhost:5000
   REGISTRY_REMOTE: public.ecr.aws
-  REGISTRY_VERSION: 3.0.0-rc.2
 jobs:
   build-and-publish:
     runs-on: ubuntu-22.04
@@ -44,11 +43,18 @@ jobs:
         run: |
           #!/bin/bash
 
+          extract_dockerfile_version() {
+            local version=$(grep '^FROM' "$1" | awk -F: '{print $2}')
+            echo "$version"
+          }
+          dockerfile_path=./registry/Dockerfile
+          registry_version=$(extract_dockerfile_version "${dockerfile_path}")
+
           # run local registry
           docker run -d \
             -p 5000:5000 \
             --name mcvs-registry-tmp \
-            registry:${{ env.REGISTRY_VERSION }}
+            registry:${registry_version}
 
           # disable tls for local tmp registry
           regctl registry set --tls disabled ${{ env.REGISTRY_LOCAL }}
