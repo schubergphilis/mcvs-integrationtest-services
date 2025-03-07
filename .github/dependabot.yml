@@ -9,6 +9,14 @@ updates:
       docker-all:
         patterns:
           - "*"
+  - package-ecosystem: "docker"
+    directory: "/registry"
+    schedule:
+      interval: "weekly"
+    groups:
+      docker-registry-image-all:
+        patterns:
+          - "*"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
