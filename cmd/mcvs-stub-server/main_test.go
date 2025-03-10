@@ -17,7 +17,7 @@ func TestHealthHandler(t *testing.T) {
 
 	// when
 	httptestRecorder := httptest.NewRecorder()
-	httptestRequest := httptest.NewRequest("GET", "/health", nil)
+	httptestRequest := httptest.NewRequest(http.MethodGet, "/health", nil)
 
 	// then
 	handler.health(httptestRecorder, httptestRequest)
@@ -32,7 +32,7 @@ func TestResetHandler(t *testing.T) {
 
 	// when
 	httptestRecorder := httptest.NewRecorder()
-	httptestRequest := httptest.NewRequest("GET", "/reset", nil)
+	httptestRequest := httptest.NewRequest(http.MethodGet, "/reset", nil)
 
 	// then
 	handler.reset(httptestRecorder, httptestRequest)
@@ -47,7 +47,7 @@ func TestConfigureHandler(t *testing.T) {
 
 	// when
 	httptestRecorder := httptest.NewRecorder()
-	httptestRequest := httptest.NewRequest("POST", "/configure", bytes.NewBuffer([]byte(`{"path": "/test", "response": {"foo": "bar"}}`)))
+	httptestRequest := httptest.NewRequest(http.MethodPost, "/configure", bytes.NewBufferString(`{"path": "/test", "response": {"foo": "bar"}}`))
 
 	// then
 	handler.configure(httptestRecorder, httptestRequest)
@@ -64,7 +64,7 @@ func TestConfigureHandlerInvalidMethod(t *testing.T) {
 
 	// when
 	httptestRecorder := httptest.NewRecorder()
-	httptestRequest := httptest.NewRequest("GET", "/configure", nil)
+	httptestRequest := httptest.NewRequest(http.MethodGet, "/configure", nil)
 
 	// then
 	handler.configure(httptestRecorder, httptestRequest)
@@ -85,7 +85,7 @@ func TestCatchAllHandler(t *testing.T) {
 
 	// when
 	httptestRecorder := httptest.NewRecorder()
-	httptestRequest := httptest.NewRequest("GET", "/test", nil)
+	httptestRequest := httptest.NewRequest(http.MethodGet, "/test", nil)
 
 	// then
 	handler.catchAll(httptestRecorder, httptestRequest)
@@ -99,7 +99,7 @@ func TestCatchAllHandlerNotFound(t *testing.T) {
 
 	// when
 	httptestRecorder := httptest.NewRecorder()
-	httptestRequest := httptest.NewRequest("GET", "/test", nil)
+	httptestRequest := httptest.NewRequest(http.MethodGet, "/test", nil)
 
 	// then
 	handler.catchAll(httptestRecorder, httptestRequest)
@@ -114,7 +114,7 @@ func TestListHandler(t *testing.T) {
 
 	// when
 	httptestRecorder := httptest.NewRecorder()
-	httptestRequest := httptest.NewRequest("GET", "/list", nil)
+	httptestRequest := httptest.NewRequest(http.MethodGet, "/list", nil)
 
 	// then
 	handler.list(httptestRecorder, httptestRequest)
@@ -129,7 +129,7 @@ func TestListHandlerInvalidMethod(t *testing.T) {
 
 	// when
 	httptestRecorder := httptest.NewRecorder()
-	httptestRequest := httptest.NewRequest("POST", "/list", nil)
+	httptestRequest := httptest.NewRequest(http.MethodPost, "/list", nil)
 
 	// then
 	handler.list(httptestRecorder, httptestRequest)
@@ -143,7 +143,7 @@ func TestListHandlerInvalidEndpointsMap(t *testing.T) {
 
 	// when
 	httptestRecorder := httptest.NewRecorder()
-	httptestRequest := httptest.NewRequest("GET", "/list", nil)
+	httptestRequest := httptest.NewRequest(http.MethodGet, "/list", nil)
 
 	// then
 	handler.list(httptestRecorder, httptestRequest)
@@ -151,46 +151,7 @@ func TestListHandlerInvalidEndpointsMap(t *testing.T) {
 }
 
 func TestLogRequestContext(t *testing.T) {
-	// Test 1: Basic GET request
-	t.Run("logs basic request info", func(t *testing.T) {
-		// Setup test request
-		req := httptest.NewRequest("GET", "http://example.com/test?param=value", nil)
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer token123")
-		req.RemoteAddr = "192.168.1.100:12345"
-
-		// Call the function
-		result := logRequestContext(req)
-
-		// Assert results
-		if !strings.Contains(result, "Request Method: GET") {
-			t.Error("Missing request method in log")
-		}
-		if !strings.Contains(result, "Absolute URL: http://example.com/test?param=value") {
-			t.Error("Missing or incorrect URL in log")
-		}
-		if !strings.Contains(result, "Absolute Path: /test") {
-			t.Error("Missing or incorrect path in log")
-		}
-		if !strings.Contains(result, "Host: example.com") {
-			t.Error("Missing host in log")
-		}
-		if !strings.Contains(result, "Remote Address: 192.168.1.100:12345") {
-			t.Error("Missing remote address in log")
-		}
-		if !strings.Contains(result, "Content-Type: application/json") {
-			t.Error("Missing regular header in log")
-		}
-		if !strings.Contains(result, "Authorization: *****") {
-			t.Error("Authorization header not properly masked")
-		}
-		if strings.Contains(result, "Bearer token123") {
-			t.Error("Authorization token should not appear in log")
-		}
-		if !strings.Contains(result, "param: value") {
-			t.Error("Missing query parameter in log")
-		}
-	})
+	helperLogRequestContextBasicGetRequest(t)
 
 	// Test 2: Request with headers including Authorization
 	t.Run("Request with Authorization header", func(t *testing.T) {
@@ -267,5 +228,41 @@ func assertNotContains(t *testing.T, haystack, needle string) {
 	t.Helper()
 	if strings.Contains(haystack, needle) {
 		t.Errorf("Expected string to NOT contain '%s', but it did.", needle)
+	}
+}
+
+func helperLogRequestContextBasicGetRequest(t *testing.T) {
+	t.Helper()
+
+	req := httptest.NewRequest(http.MethodGet, "http://example.com/test?param=value", nil)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer token123")
+	req.RemoteAddr = "192.168.1.100:12345"
+
+	result := logRequestContext(req)
+
+	testCases := []struct {
+		substring    string
+		errorMsg     string
+		checkContain bool
+	}{
+		{"Request Method: GET", "Missing request method in log", true},
+		{"Absolute URL: http://example.com/test?param=value", "Missing or incorrect URL in log", true},
+		{"Absolute Path: /test", "Missing or incorrect path in log", true},
+		{"Host: example.com", "Missing host in log", true},
+		{"Remote Address: 192.168.1.100:12345", "Missing remote address in log", true},
+		{"Content-Type: application/json", "Missing regular header in log", true},
+		{"Authorization: *****", "Authorization header not properly masked", true},
+		{"Bearer token123", "Authorization token should not appear in log", false},
+		{"param: value", "Missing query parameter in log", true},
+	}
+
+	for _, tc := range testCases {
+		if tc.checkContain && !strings.Contains(result, tc.substring) {
+			t.Error(tc.errorMsg)
+		}
+		if !tc.checkContain && strings.Contains(result, tc.substring) {
+			t.Error(tc.errorMsg)
+		}
 	}
 }
