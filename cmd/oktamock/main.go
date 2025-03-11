@@ -6,23 +6,22 @@ import (
 	"crypto/rsa"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
 	"github.com/caarlos0/env/v9"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/lestrrat-go/jwx/v2/jwk"
-
-	"schubergphilis/mcvs-integrationtest-services/internal/oktamock/models"
+	"github.com/schubergphilis/mcvs-integrationtest-services/internal/oktamock/models"
+	log "github.com/sirupsen/logrus"
 )
 
 // ErrUnsupportedSigningMethod represents an error when an unsupported signing method is provided.
-type ErrUnsupportedSigningMethod struct {
+type UnsupportedSigningMethodError struct {
 	ProvidedMethod string
 }
 
-func (e ErrUnsupportedSigningMethod) Error() string {
+func (e UnsupportedSigningMethodError) Error() string {
 	return fmt.Sprintf("unsupported signing method: %s", e.ProvidedMethod)
 }
 
@@ -41,15 +40,19 @@ func (s *SigningMethod) UnmarshalText(text []byte) error {
 	switch string(text) {
 	case "RS256":
 		s.actualMethod = jwt.SigningMethodRS256
+
 		return nil
 	case "RS384":
 		s.actualMethod = jwt.SigningMethodRS384
+
 		return nil
 	case "RS512":
 		s.actualMethod = jwt.SigningMethodRS512
+
 		return nil
 	}
-	return ErrUnsupportedSigningMethod{
+
+	return UnsupportedSigningMethodError{
 		ProvidedMethod: string(text),
 	}
 }
@@ -67,13 +70,13 @@ type ServerConfig struct {
 
 // JWTConfig represents the JWT configuration.
 type JWTConfig struct {
-	Aud           string        `env:"AUD" envDefault:"api://default"`
-	Expiration    time.Duration `env:"EXPIRATION" envDefault:"24h"`
-	Groups        []string      `env:"GROUPS" envDefault:""`
-	Issuer        string        `env:"ISSUER" envDefault:"http://localhost:8080"`
-	KID           string        `env:"KID" envDefault:"mock-kid"`
+	Aud           string        `env:"AUD"            envDefault:"api://default"`
+	Expiration    time.Duration `env:"EXPIRATION"     envDefault:"24h"`
+	Groups        []string      `env:"GROUPS"         envDefault:""`
+	Issuer        string        `env:"ISSUER"         envDefault:"http://localhost:8080"`
+	KID           string        `env:"KID"            envDefault:"mock-kid"`
 	SigningMethod SigningMethod `env:"SIGNING_METHOD" envDefault:"RS256"`
-	Sub           string        `env:"SUB" envDefault:""`
+	Sub           string        `env:"SUB"            envDefault:""`
 }
 
 // NewConfig returns the config.
@@ -83,6 +86,7 @@ func NewConfig() (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return &cfg, nil
 }
 
@@ -128,6 +132,7 @@ func (o *OktaMockServer) handleGetValidJWT(w http.ResponseWriter, r *http.Reques
 	var claimsReq CustomClaimsRequest
 	if err := decoder.Decode(&claimsReq); err != nil {
 		http.Error(w, "Okta mock expects custom claims to be present in token request", http.StatusBadRequest)
+
 		return
 	}
 
@@ -151,14 +156,14 @@ func (o *OktaMockServer) handleGetValidJWT(w http.ResponseWriter, r *http.Reques
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	token.Header["kid"] = o.jwkKey.KeyID()
 
-	// Generate the signed JWT string.
 	res, err := token.SignedString(o.privKey)
 	if err != nil {
-		log.Default().Println(err)
+		log.WithError(err).Error("unable to generate the signed JWT string")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+
 		return
 	}
-	log.Default().Println("Generated JWT:", res)
+	log.WithFields(log.Fields{"jwt": res}).Info("generated")
 
 	// Prepare and send the response.
 	tokenResponse := models.ValidJWTResponse{
@@ -166,13 +171,14 @@ func (o *OktaMockServer) handleGetValidJWT(w http.ResponseWriter, r *http.Reques
 	}
 	b, err := json.Marshal(tokenResponse)
 	if err != nil {
-		log.Default().Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.WithError(err).WithFields(log.Fields{"httpStatusCode": http.StatusInternalServerError}).Error("unable to generate the signed JWT string")
+
 		return
 	}
 	_, err = w.Write(b)
 	if err != nil {
-		log.Default().Println(err)
+		log.WithError(err).Error("unable to write token response")
 	}
 }
 
@@ -182,13 +188,14 @@ func (o *OktaMockServer) handleGetJWKS(w http.ResponseWriter, _ *http.Request) {
 	}
 	b, err := json.Marshal(resp)
 	if err != nil {
-		log.Default().Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.WithError(err).WithFields(log.Fields{"httpStatusCode": http.StatusInternalServerError}).Error("unable to handle get JWKS")
+
 		return
 	}
 	_, err = w.Write(b)
 	if err != nil {
-		log.Default().Println(err)
+		log.WithError(err).Error("unable to write JWKS")
 	}
 }
 
@@ -198,13 +205,14 @@ func (o *OktaMockServer) handleOpenIDConfig(w http.ResponseWriter, _ *http.Reque
 	}
 	b, err := json.Marshal(resp)
 	if err != nil {
-		log.Default().Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.WithError(err).WithFields(log.Fields{"httpStatusCode": http.StatusInternalServerError}).Error("unable to handle openID config")
+
 		return
 	}
 	_, err = w.Write(b)
 	if err != nil {
-		log.Default().Println(err)
+		log.WithError(err).Error("unable to write openID config")
 	}
 }
 
@@ -252,5 +260,6 @@ func genRSAKeyAndJWK(cfg *JWTConfig) (*rsa.PrivateKey, jwk.Key, error) {
 	if err != nil {
 		return nil, nil, err
 	}
+
 	return privateKey, jwkKey, nil
 }

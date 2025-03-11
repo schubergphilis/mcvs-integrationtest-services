@@ -6,14 +6,13 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
-
-	"schubergphilis/mcvs-integrationtest-services/internal/pkg/constants"
-	"schubergphilis/mcvs-integrationtest-services/internal/pkg/dockertestutils"
+	"github.com/schubergphilis/mcvs-golang-project-root/pkg/projectroot"
+	"github.com/schubergphilis/mcvs-integrationtest-services/internal/pkg/dockertestutils"
+	log "github.com/sirupsen/logrus"
 )
 
 // ErrOktaMockServerNotHealthy okta mock server not healthy.
@@ -42,6 +41,7 @@ func NewResource(pool *dockertest.Pool, network *dockertest.Network) *Resource {
 // WithLogger adds a logger to the resources, to track docker logs.
 func (r *Resource) WithLogger(writer io.Writer) *Resource {
 	r.writer = writer
+
 	return r
 }
 
@@ -49,7 +49,7 @@ func (r *Resource) WithLogger(writer io.Writer) *Resource {
 func (r *Resource) Start(opts *dockertest.RunOptions, _ string, hcOpts ...func(*docker.HostConfig)) error {
 	opts.Networks = append(opts.Networks, r.network)
 	var err error
-	projectRoot, err := constants.FindProjectRoot()
+	projectRoot, err := projectroot.FindProjectRoot()
 	if err != nil {
 		return fmt.Errorf("failed to determine the root of the project: %w", err)
 	}
@@ -91,18 +91,20 @@ func (r *Resource) startupCheck(opts *dockertest.RunOptions) error {
 		}
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
-			log.Default().Println("unable to perform http request okta mock server, try again...", err)
+			log.WithError(err).Error("unable to perform http request okta mock server, try again...")
+
 			return err
 		}
 		defer func() {
 			err = resp.Body.Close()
 			if err != nil {
-				log.Default().Println("unable to close response body", err)
+				log.WithError(err).Error("unable to close response body")
 			}
 		}()
 		if resp.StatusCode != http.StatusOK {
 			return ErrOktaMockServerNotHealthy
 		}
+
 		return nil
 	})
 }
@@ -116,6 +118,7 @@ func (r *Resource) waitUntilContainerIsRunning() error {
 		if container.State.Running {
 			return nil
 		}
+
 		return ErrNotRunning
 	})
 }

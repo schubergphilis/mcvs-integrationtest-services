@@ -7,9 +7,8 @@ import (
 	"testing"
 
 	"github.com/ory/dockertest/v3"
+	"github.com/schubergphilis/mcvs-integrationtest-services/internal/pkg/dockertestutils"
 	"github.com/stretchr/testify/assert"
-
-	"schubergphilis/mcvs-integrationtest-services/internal/pkg/dockertestutils"
 )
 
 const (
