@@ -11,14 +11,15 @@ import (
 	"sync"
 )
 
-const maxBodySizeBytes = 1024 * 10 //
+const (
+	maxBodySizeBytes = 1024 * 10
+	baseURLPath      = "/stubserver"
+)
 
 func main() {
 	h := newHandler()
 	http.HandleFunc("/health", h.health)
-	http.HandleFunc("/reset", h.reset)
-	http.HandleFunc("/configure", h.configure)
-	http.HandleFunc("/list", h.list)
+	http.HandleFunc(baseURLPath+"/responses", h.handleResponses)
 	http.HandleFunc("/", h.catchAll)
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
@@ -40,6 +41,19 @@ func newHandler() *handler {
 
 func (h *handler) health(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
+}
+
+func (h *handler) handleResponses(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodDelete:
+		h.reset(w, r)
+	case http.MethodPost:
+		h.configure(w, r)
+	case http.MethodGet:
+		h.list(w, r)
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
 }
 
 func (h *handler) reset(w http.ResponseWriter, r *http.Request) {
