@@ -46,28 +46,28 @@ func (h *handler) health(w http.ResponseWriter, r *http.Request) {
 func (h *handler) handleResponses(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodDelete:
-		h.reset(w, r)
+		h.deleteAllResponses(w, r)
 	case http.MethodPost:
-		h.configure(w, r)
+		h.addResponse(w, r)
 	case http.MethodGet:
-		h.list(w, r)
+		h.getAllResponses(w, r)
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
 
-func (h *handler) reset(w http.ResponseWriter, r *http.Request) {
+func (h *handler) deleteAllResponses(w http.ResponseWriter, r *http.Request) {
 	h.endpoints = map[string]any{}
 	w.WriteHeader(http.StatusOK)
 }
 
-// EndpointConfigurationRequest is the request body for the /configure endpoint.
+// EndpointConfigurationRequest is the request body for the /addResponse endpoint.
 type EndpointConfigurationRequest struct {
 	Path     string `json:"path"`
 	Response any    `json:"response"`
 }
 
-func (h *handler) configure(w http.ResponseWriter, r *http.Request) {
+func (h *handler) addResponse(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -157,7 +157,7 @@ func logRequestContext(r *http.Request) string {
 	return requestInfo.String()
 }
 
-func (h *handler) list(w http.ResponseWriter, r *http.Request) {
+func (h *handler) getAllResponses(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return

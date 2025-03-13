@@ -32,10 +32,10 @@ func TestResetHandler(t *testing.T) {
 
 	// when
 	httptestRecorder := httptest.NewRecorder()
-	httptestRequest := httptest.NewRequest("GET", "/reset", nil)
+	httptestRequest := httptest.NewRequest("GET", "/deleteAllResponses", nil)
 
 	// then
-	handler.reset(httptestRecorder, httptestRequest)
+	handler.deleteAllResponses(httptestRecorder, httptestRequest)
 	assert.Len(t, handler.endpoints, 0)
 	assert.Equal(t, http.StatusOK, httptestRecorder.Code)
 }
@@ -47,10 +47,10 @@ func TestConfigureHandler(t *testing.T) {
 
 	// when
 	httptestRecorder := httptest.NewRecorder()
-	httptestRequest := httptest.NewRequest("POST", "/configure", bytes.NewBuffer([]byte(`{"path": "/test", "response": {"foo": "bar"}}`)))
+	httptestRequest := httptest.NewRequest("POST", "/addResponse", bytes.NewBuffer([]byte(`{"path": "/test", "response": {"foo": "bar"}}`)))
 
 	// then
-	handler.configure(httptestRecorder, httptestRequest)
+	handler.addResponse(httptestRecorder, httptestRequest)
 	assert.Len(t, handler.endpoints, 1)
 	b, err := json.Marshal(handler.endpoints["/test"])
 	assert.NoError(t, err)
@@ -64,10 +64,10 @@ func TestConfigureHandlerInvalidMethod(t *testing.T) {
 
 	// when
 	httptestRecorder := httptest.NewRecorder()
-	httptestRequest := httptest.NewRequest("GET", "/configure", nil)
+	httptestRequest := httptest.NewRequest("GET", "/addResponse", nil)
 
 	// then
-	handler.configure(httptestRecorder, httptestRequest)
+	handler.addResponse(httptestRecorder, httptestRequest)
 	assert.Equal(t, http.StatusMethodNotAllowed, httptestRecorder.Code)
 }
 
@@ -114,10 +114,10 @@ func TestListHandler(t *testing.T) {
 
 	// when
 	httptestRecorder := httptest.NewRecorder()
-	httptestRequest := httptest.NewRequest("GET", "/list", nil)
+	httptestRequest := httptest.NewRequest("GET", "/getAllResponses", nil)
 
 	// then
-	handler.list(httptestRecorder, httptestRequest)
+	handler.getAllResponses(httptestRecorder, httptestRequest)
 	assert.Equal(t, http.StatusOK, httptestRecorder.Code)
 	assert.Len(t, handler.endpoints, 2)
 	assert.Equal(t, []byte(`{"/bar":"foo","/foo":"bar"}`), httptestRecorder.Body.Bytes())
@@ -129,10 +129,10 @@ func TestListHandlerInvalidMethod(t *testing.T) {
 
 	// when
 	httptestRecorder := httptest.NewRecorder()
-	httptestRequest := httptest.NewRequest("POST", "/list", nil)
+	httptestRequest := httptest.NewRequest("POST", "/getAllResponses", nil)
 
 	// then
-	handler.list(httptestRecorder, httptestRequest)
+	handler.getAllResponses(httptestRecorder, httptestRequest)
 	assert.Equal(t, http.StatusMethodNotAllowed, httptestRecorder.Code)
 }
 
@@ -143,10 +143,10 @@ func TestListHandlerInvalidEndpointsMap(t *testing.T) {
 
 	// when
 	httptestRecorder := httptest.NewRecorder()
-	httptestRequest := httptest.NewRequest("GET", "/list", nil)
+	httptestRequest := httptest.NewRequest("GET", "/getAllResponses", nil)
 
 	// then
-	handler.list(httptestRecorder, httptestRequest)
+	handler.getAllResponses(httptestRecorder, httptestRequest)
 	assert.Equal(t, http.StatusInternalServerError, httptestRecorder.Code)
 }
 
