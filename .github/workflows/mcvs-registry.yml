@@ -85,7 +85,7 @@ jobs:
         with:
           build-args: ${{ matrix.build-args }}
           context: ${{ env.DOCKERFILE_CONTEXT }}
-          dockle-accept-key: "curl,HOME,libcrypto3,libssl3,PATH"
+          dockle-accept-key: APPLICATION,apkArch,arch,sha256,version
           images: ${{ env.IMAGE_REPO }}/${{ matrix.build-args }}
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Get new registry catalog

@@ -23,6 +23,8 @@ jobs:
       - uses: schubergphilis/mcvs-docker-action@v0.6.2
         with:
           build-args: ${{ matrix.build-args }}
+          # yamllint disable rule:line-length
+          dockle-accept-key: curl,HOME,libcrypto3,libssl3,PATH
+          # yamllint enable rule:line-length
           images: ghcr.io/${{ github.repository }}/${{ matrix.build-args }}
-          dockle-accept-key: APPLICATION,curl,HOME,libcrypto3,libssl3,PATH
           token: ${{ secrets.GITHUB_TOKEN }}
