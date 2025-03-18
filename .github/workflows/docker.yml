@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4.2.2
-      - uses: schubergphilis/mcvs-docker-action@v0.6.1
+      - uses: schubergphilis/mcvs-docker-action@v0.6.2
         with:
           build-args: ${{ matrix.build-args }}
           images: ghcr.io/${{ github.repository }}/${{ matrix.build-args }}
