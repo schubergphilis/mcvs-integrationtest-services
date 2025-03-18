@@ -8,7 +8,7 @@ require (
 	github.com/labstack/echo/v4 v4.13.3
 	github.com/lestrrat-go/jwx/v2 v2.1.4
 	github.com/ory/dockertest/v3 v3.11.0
-	github.com/schubergphilis/mcvs-golang-project-root v0.0.0-20250211103401-e0bf30ef0f4e
+	github.com/schubergphilis/mcvs-golang-project-root v0.1.2
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.10.0
 )
