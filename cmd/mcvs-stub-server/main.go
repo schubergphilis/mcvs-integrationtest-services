@@ -12,14 +12,16 @@ import (
 )
 
 const (
-	maxBodySizeBytes = 1024 * 10
-	baseURLPath      = "/stubserver"
+	maxBodySizeBytes  = 1024 * 10
+	baseURLPath       = "/stubserver"
+	healthEndpoint    = "/health"
+	responsesEndpoint = "/responses"
 )
 
 func main() {
 	h := newHandler()
-	http.HandleFunc("/health", h.health)
-	http.HandleFunc(baseURLPath+"/responses", h.handleResponses)
+	http.HandleFunc(healthEndpoint, h.health)
+	http.HandleFunc(baseURLPath+responsesEndpoint, h.handleResponses)
 	http.HandleFunc("/", h.catchAll)
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {

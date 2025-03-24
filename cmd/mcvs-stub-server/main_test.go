@@ -17,14 +17,14 @@ func TestHealthHandler(t *testing.T) {
 
 	// when
 	httptestRecorder := httptest.NewRecorder()
-	httptestRequest := httptest.NewRequest("GET", "/health", nil)
+	httptestRequest := httptest.NewRequest("GET", healthEndpoint, nil)
 
 	// then
 	handler.health(httptestRecorder, httptestRequest)
 	assert.Equal(t, http.StatusOK, httptestRecorder.Code)
 }
 
-func TestResetHandler(t *testing.T) {
+func TestHandleResponsesDelete(t *testing.T) {
 	// given
 	handler := newHandler()
 	handler.endpoints["/test"] = "test"
@@ -32,25 +32,26 @@ func TestResetHandler(t *testing.T) {
 
 	// when
 	httptestRecorder := httptest.NewRecorder()
-	httptestRequest := httptest.NewRequest("GET", "/deleteAllResponses", nil)
+	httptestRequest := httptest.NewRequest("DELETE", baseURLPath+responsesEndpoint, nil)
 
 	// then
-	handler.deleteAllResponses(httptestRecorder, httptestRequest)
+	handler.handleResponses(httptestRecorder, httptestRequest)
 	assert.Len(t, handler.endpoints, 0)
 	assert.Equal(t, http.StatusOK, httptestRecorder.Code)
 }
 
-func TestConfigureHandler(t *testing.T) {
+func TestHandleResponsesPost(t *testing.T) {
 	// given
 	handler := newHandler()
 	assert.Len(t, handler.endpoints, 0)
 
 	// when
 	httptestRecorder := httptest.NewRecorder()
-	httptestRequest := httptest.NewRequest("POST", "/addResponse", bytes.NewBuffer([]byte(`{"path": "/test", "response": {"foo": "bar"}}`)))
+	httptestRequest := httptest.NewRequest("POST", baseURLPath+responsesEndpoint, bytes.NewBuffer([]byte(`{"path": "/test", "response": {"foo": "bar"}}`)))
+	httptestRequest.Header.Set("Content-Type", "application/json")
 
 	// then
-	handler.addResponse(httptestRecorder, httptestRequest)
+	handler.handleResponses(httptestRecorder, httptestRequest)
 	assert.Len(t, handler.endpoints, 1)
 	b, err := json.Marshal(handler.endpoints["/test"])
 	assert.NoError(t, err)
@@ -58,16 +59,16 @@ func TestConfigureHandler(t *testing.T) {
 	assert.Equal(t, http.StatusOK, httptestRecorder.Code)
 }
 
-func TestConfigureHandlerInvalidMethod(t *testing.T) {
+func TestHandleResponsesInvalidMethod(t *testing.T) {
 	// given
 	handler := newHandler()
 
 	// when
 	httptestRecorder := httptest.NewRecorder()
-	httptestRequest := httptest.NewRequest("GET", "/addResponse", nil)
+	httptestRequest := httptest.NewRequest("PATCH", baseURLPath+responsesEndpoint, nil)
 
 	// then
-	handler.addResponse(httptestRecorder, httptestRequest)
+	handler.handleResponses(httptestRecorder, httptestRequest)
 	assert.Equal(t, http.StatusMethodNotAllowed, httptestRecorder.Code)
 }
 
@@ -114,10 +115,10 @@ func TestListHandler(t *testing.T) {
 
 	// when
 	httptestRecorder := httptest.NewRecorder()
-	httptestRequest := httptest.NewRequest("GET", "/getAllResponses", nil)
+	httptestRequest := httptest.NewRequest("GET", baseURLPath+responsesEndpoint, nil)
 
 	// then
-	handler.getAllResponses(httptestRecorder, httptestRequest)
+	handler.handleResponses(httptestRecorder, httptestRequest)
 	assert.Equal(t, http.StatusOK, httptestRecorder.Code)
 	assert.Len(t, handler.endpoints, 2)
 	assert.Equal(t, []byte(`{"/bar":"foo","/foo":"bar"}`), httptestRecorder.Body.Bytes())
@@ -126,14 +127,15 @@ func TestListHandler(t *testing.T) {
 func TestListHandlerInvalidMethod(t *testing.T) {
 	// given
 	handler := newHandler()
+	handler.endpoints["/bad"] = func() {}
 
 	// when
 	httptestRecorder := httptest.NewRecorder()
-	httptestRequest := httptest.NewRequest("POST", "/getAllResponses", nil)
+	httptestRequest := httptest.NewRequest("GET", baseURLPath+responsesEndpoint, nil)
 
 	// then
-	handler.getAllResponses(httptestRecorder, httptestRequest)
-	assert.Equal(t, http.StatusMethodNotAllowed, httptestRecorder.Code)
+	handler.handleResponses(httptestRecorder, httptestRequest)
+	assert.Equal(t, http.StatusInternalServerError, httptestRecorder.Code)
 }
 
 func TestListHandlerInvalidEndpointsMap(t *testing.T) {
@@ -143,7 +145,7 @@ func TestListHandlerInvalidEndpointsMap(t *testing.T) {
 
 	// when
 	httptestRecorder := httptest.NewRecorder()
-	httptestRequest := httptest.NewRequest("GET", "/getAllResponses", nil)
+	httptestRequest := httptest.NewRequest("GET", baseURLPath+responsesEndpoint, nil)
 
 	// then
 	handler.getAllResponses(httptestRecorder, httptestRequest)
@@ -268,4 +270,87 @@ func assertNotContains(t *testing.T, haystack, needle string) {
 	if strings.Contains(haystack, needle) {
 		t.Errorf("Expected string to NOT contain '%s', but it did.", needle)
 	}
+}
+
+func TestCompleteServerFlow(t *testing.T) {
+	// Start the test server
+	server, h := startTestServer(t)
+	defer server.Close()
+
+	// Test 1: Check health endpoint using direct handler call
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, healthEndpoint, nil)
+	h.health(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	// Test 2: Add a response using direct handler call
+	payload := EndpointConfigurationRequest{
+		Path:     "/api/products",
+		Response: map[string]interface{}{"products": []string{"product1", "product2"}},
+	}
+	respBody, err := json.Marshal(payload)
+	if err != nil {
+		t.Fatalf("Failed to serialize payload: %v", err)
+	}
+
+	w = httptest.NewRecorder()
+	req = httptest.NewRequest(http.MethodPost, baseURLPath+responsesEndpoint, bytes.NewBuffer(respBody))
+	req.Header.Set("Content-Type", "application/json")
+	h.handleResponses(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	// Test 3: Verify the response is available using direct handler call
+	w = httptest.NewRecorder()
+	req = httptest.NewRequest(http.MethodGet, "/api/products", nil)
+	h.catchAll(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var responseBody map[string]interface{}
+	err = json.NewDecoder(w.Body).Decode(&responseBody)
+	if err != nil {
+		t.Fatalf("Failed to decode response: %v", err)
+	}
+	products, ok := responseBody["products"].([]interface{})
+	assert.True(t, ok)
+	assert.Equal(t, 2, len(products))
+
+	// Test 4: List all responses
+	w = httptest.NewRecorder()
+	req = httptest.NewRequest(http.MethodGet, baseURLPath+responsesEndpoint, nil)
+	h.handleResponses(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	// Test 5: Delete all responses using direct handler call
+	w = httptest.NewRecorder()
+	req = httptest.NewRequest(http.MethodDelete, baseURLPath+responsesEndpoint, nil)
+	h.handleResponses(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	// Test 6: Verify the response was removed using direct handler call
+	w = httptest.NewRecorder()
+	req = httptest.NewRequest(http.MethodGet, "/api/products", nil)
+	h.catchAll(w, req)
+	assert.Equal(t, http.StatusNotFound, w.Code)
+}
+
+// startTestServer creates and runs a test server with all handlers
+// returns an instance of the test server and a pointer to the handler for state verification
+func startTestServer(t *testing.T) (*httptest.Server, *handler) {
+	h := newHandler()
+
+	// Define multiplexer for all paths
+	mux := http.NewServeMux()
+	mux.HandleFunc(healthEndpoint, h.health)
+	mux.HandleFunc(baseURLPath+responsesEndpoint, h.handleResponses)
+	mux.HandleFunc("/", h.catchAll)
+
+	// Create and start the test server
+	server := httptest.NewServer(mux)
+
+	// Add cleanup that will close the server after the test completes
+	t.Cleanup(func() {
+		server.Close()
+	})
+
+	return server, h
 }
