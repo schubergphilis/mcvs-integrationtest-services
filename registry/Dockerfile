@@ -1,7 +1,8 @@
-FROM registry:3.0.0-rc.2
+FROM registry:3.0.0-rc.3
 ARG APPLICATION
 RUN apk update && \
-    apk upgrade
+    apk upgrade && \
+    adduser -D -u 1000 ${APPLICATION}
 # A custom config file is needed to disable default cache
 # By default the cache is "blobdescriptor: inmemory"
 # The config-example.yml file of this repo can be found at:
@@ -11,3 +12,4 @@ RUN apk update && \
 COPY config-example.yml /etc/docker/registry/config.yml
 COPY config-example.yml /etc/distribution/config.yml
 COPY backup-registry /var/lib/registry
+USER ${APPLICATION}

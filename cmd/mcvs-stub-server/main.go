@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strings"
 	"sync"
+
+	"github.com/schubergphilis/mcvs-integrationtest-services/internal/pkg/constants"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -23,7 +25,13 @@ func main() {
 	http.HandleFunc(healthEndpoint, h.health)
 	http.HandleFunc(baseURLPath+responsesEndpoint, h.handleResponses)
 	http.HandleFunc("/", h.catchAll)
-	err := http.ListenAndServe(":8080", nil)
+
+	server := &http.Server{
+		Addr:              ":8080",
+		ReadHeaderTimeout: constants.DefaultHTTPTimeout,
+	}
+
+	err := server.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -41,7 +49,7 @@ func newHandler() *handler {
 	}
 }
 
-func (h *handler) health(w http.ResponseWriter, r *http.Request) {
+func (h *handler) health(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -72,22 +80,26 @@ type EndpointConfigurationRequest struct {
 func (h *handler) addResponse(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+
 		return
 	}
 
 	request := EndpointConfigurationRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
+
 		return
 	}
 
 	if request.Path == "" {
 		http.Error(w, "Path is required", http.StatusBadRequest)
+
 		return
 	}
 
 	if request.Response == nil {
 		http.Error(w, "Response is required", http.StatusBadRequest)
+
 		return
 	}
 	h.mu.Lock()
@@ -98,24 +110,29 @@ func (h *handler) addResponse(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) catchAll(w http.ResponseWriter, r *http.Request) {
-	log.Default().Println(logRequestContext(r))
+	log.WithFields(log.Fields{"context": logRequestContext(r)}).Info("log request")
 
 	response, exists := h.endpoints[r.URL.Path]
 	if !exists {
+		log.WithFields(log.Fields{"urlPath": r.URL.Path}).Error("endpoint not found")
 		http.NotFound(w, r)
+
 		return
 	}
+	log.WithFields(log.Fields{"urlPath": r.URL.Path}).Error("failed to write response")
 
 	b, err := json.Marshal(response)
 	if err != nil {
-		log.Default().Println("Failed to marshal response:", err)
+		log.WithError(err).Error("failed to marshal response")
+
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
+
 		return
 	}
 
 	_, err = w.Write(b)
 	if err != nil {
-		log.Default().Println("Failed to write response:", err)
+		log.WithError(err).Error("failed to write response")
 	}
 }
 
@@ -132,6 +149,7 @@ func logRequestContext(r *http.Request) string {
 	for name, values := range r.Header {
 		if strings.EqualFold(name, "Authorization") {
 			requestInfo.WriteString(fmt.Sprintf("  %s: *****\n", name))
+
 			continue
 		}
 		for _, value := range values {
@@ -162,6 +180,7 @@ func logRequestContext(r *http.Request) string {
 func (h *handler) getAllResponses(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+
 		return
 	}
 
@@ -170,13 +189,14 @@ func (h *handler) getAllResponses(w http.ResponseWriter, r *http.Request) {
 
 	b, err := json.Marshal(h.endpoints)
 	if err != nil {
-		log.Default().Println("Failed to marshal endpoints:", err)
+		log.WithError(err).Error("failed to marshal endpoints")
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
+
 		return
 	}
 
 	_, err = w.Write(b)
 	if err != nil {
-		log.Default().Println("Failed to write response:", err)
+		log.WithError(err).Error("failed to write response")
 	}
 }

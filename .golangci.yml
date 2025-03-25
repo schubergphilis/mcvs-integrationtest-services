@@ -1,0 +1,27 @@
+---
+linters:
+  enable-all: true
+  disable:
+    - err113
+    - exhaustruct
+    - ireturn
+    - lll
+    - paralleltest
+    - perfsprint
+    - recvcheck
+    - tagliatelle
+    - tenv
+    - testifylint
+    - testpackage
+    - varnamelen
+    - wrapcheck
+    - wsl
+linters-settings:
+  depguard:
+    rules:
+      main:
+        deny:
+          - pkg: "log"
+            desc: Use 'log "github.com/sirupsen/logrus"' instead
+          - pkg: "github.com/pkg/errors"
+            desc: Should be replaced by standard lib errors package

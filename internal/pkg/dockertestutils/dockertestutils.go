@@ -19,6 +19,7 @@ func GetOrCreateNetwork(pool *dockertest.Pool, name string) (*dockertest.Network
 	if len(networks) == 0 {
 		return pool.CreateNetwork(name)
 	}
+
 	return &networks[0], nil
 }
 
