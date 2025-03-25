@@ -17,7 +17,7 @@ func TestHealthHandler(t *testing.T) {
 
 	// when
 	httptestRecorder := httptest.NewRecorder()
-	httptestRequest := httptest.NewRequest("GET", healthEndpoint, nil)
+	httptestRequest := httptest.NewRequest(http.MethodGet, healthEndpoint, nil)
 
 	// then
 	handler.health(httptestRecorder, httptestRequest)
@@ -32,7 +32,7 @@ func TestHandleResponsesDelete(t *testing.T) {
 
 	// when
 	httptestRecorder := httptest.NewRecorder()
-	httptestRequest := httptest.NewRequest("DELETE", baseURLPath+responsesEndpoint, nil)
+	httptestRequest := httptest.NewRequest(http.MethodDelete, baseURLPath+responsesEndpoint, nil)
 
 	// then
 	handler.handleResponses(httptestRecorder, httptestRequest)
@@ -47,7 +47,7 @@ func TestHandleResponsesPost(t *testing.T) {
 
 	// when
 	httptestRecorder := httptest.NewRecorder()
-	httptestRequest := httptest.NewRequest("POST", baseURLPath+responsesEndpoint, bytes.NewBuffer([]byte(`{"path": "/test", "response": {"foo": "bar"}}`)))
+	httptestRequest := httptest.NewRequest(http.MethodPost, baseURLPath+responsesEndpoint, bytes.NewBuffer([]byte(`{"path": "/test", "response": {"foo": "bar"}}`)))
 	httptestRequest.Header.Set("Content-Type", "application/json")
 
 	// then
@@ -65,7 +65,7 @@ func TestHandleResponsesInvalidMethod(t *testing.T) {
 
 	// when
 	httptestRecorder := httptest.NewRecorder()
-	httptestRequest := httptest.NewRequest("PATCH", baseURLPath+responsesEndpoint, nil)
+	httptestRequest := httptest.NewRequest(http.MethodPatch, baseURLPath+responsesEndpoint, nil)
 
 	// then
 	handler.handleResponses(httptestRecorder, httptestRequest)
@@ -115,7 +115,7 @@ func TestListHandler(t *testing.T) {
 
 	// when
 	httptestRecorder := httptest.NewRecorder()
-	httptestRequest := httptest.NewRequest("GET", baseURLPath+responsesEndpoint, nil)
+	httptestRequest := httptest.NewRequest(http.MethodGet, baseURLPath+responsesEndpoint, nil)
 
 	// then
 	handler.handleResponses(httptestRecorder, httptestRequest)
@@ -131,7 +131,7 @@ func TestListHandlerInvalidMethod(t *testing.T) {
 
 	// when
 	httptestRecorder := httptest.NewRecorder()
-	httptestRequest := httptest.NewRequest("GET", baseURLPath+responsesEndpoint, nil)
+	httptestRequest := httptest.NewRequest(http.MethodGet, baseURLPath+responsesEndpoint, nil)
 
 	// then
 	handler.handleResponses(httptestRecorder, httptestRequest)
@@ -145,7 +145,7 @@ func TestListHandlerInvalidEndpointsMap(t *testing.T) {
 
 	// when
 	httptestRecorder := httptest.NewRecorder()
-	httptestRequest := httptest.NewRequest("GET", baseURLPath+responsesEndpoint, nil)
+	httptestRequest := httptest.NewRequest(http.MethodGet, baseURLPath+responsesEndpoint, nil)
 
 	// then
 	handler.getAllResponses(httptestRecorder, httptestRequest)
@@ -154,6 +154,46 @@ func TestListHandlerInvalidEndpointsMap(t *testing.T) {
 
 func TestLogRequestContext(t *testing.T) {
 	helperLogRequestContextBasicGetRequest(t)
+	// Test 1: Basic GET request
+	t.Run("logs basic request info", func(t *testing.T) {
+		// Setup test request
+		req := httptest.NewRequest(http.MethodGet, "http://example.com/test?param=value", nil)
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer token123")
+		req.RemoteAddr = "192.168.1.100:12345"
+
+		// Call the function
+		result := logRequestContext(req)
+
+		// Assert results
+		if !strings.Contains(result, "Request Method: GET") {
+			t.Error("Missing request method in log")
+		}
+		if !strings.Contains(result, "Absolute URL: http://example.com/test?param=value") {
+			t.Error("Missing or incorrect URL in log")
+		}
+		if !strings.Contains(result, "Absolute Path: /test") {
+			t.Error("Missing or incorrect path in log")
+		}
+		if !strings.Contains(result, "Host: example.com") {
+			t.Error("Missing host in log")
+		}
+		if !strings.Contains(result, "Remote Address: 192.168.1.100:12345") {
+			t.Error("Missing remote address in log")
+		}
+		if !strings.Contains(result, "Content-Type: application/json") {
+			t.Error("Missing regular header in log")
+		}
+		if !strings.Contains(result, "Authorization: *****") {
+			t.Error("Authorization header not properly masked")
+		}
+		if strings.Contains(result, "Bearer token123") {
+			t.Error("Authorization token should not appear in log")
+		}
+		if !strings.Contains(result, "param: value") {
+			t.Error("Missing query parameter in log")
+		}
+	})
 
 	// Test 2: Request with headers including Authorization
 	t.Run("Request with Authorization header", func(t *testing.T) {
