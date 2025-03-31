@@ -13,14 +13,17 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const maxBodySizeBytes = 1024 * 10 //
+const (
+	maxBodySizeBytes  = 1024 * 10
+	baseURLPath       = "/stubserver"
+	healthEndpoint    = "/health"
+	responsesEndpoint = "/responses"
+)
 
 func main() {
 	h := newHandler()
-	http.HandleFunc("/health", h.health)
-	http.HandleFunc("/reset", h.reset)
-	http.HandleFunc("/configure", h.configure)
-	http.HandleFunc("/list", h.list)
+	http.HandleFunc(healthEndpoint, h.health)
+	http.HandleFunc(baseURLPath+responsesEndpoint, h.handleResponses)
 	http.HandleFunc("/", h.catchAll)
 
 	server := &http.Server{
@@ -50,18 +53,31 @@ func (h *handler) health(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (h *handler) reset(w http.ResponseWriter, _ *http.Request) {
+func (h *handler) handleResponses(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodDelete:
+		h.deleteAllResponses(w, r)
+	case http.MethodPost:
+		h.addResponse(w, r)
+	case http.MethodGet:
+		h.getAllResponses(w, r)
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func (h *handler) deleteAllResponses(w http.ResponseWriter, _ *http.Request) {
 	h.endpoints = map[string]any{}
 	w.WriteHeader(http.StatusOK)
 }
 
-// EndpointConfigurationRequest is the request body for the /configure endpoint.
+// EndpointConfigurationRequest is the request body for the /addResponse endpoint.
 type EndpointConfigurationRequest struct {
 	Path     string `json:"path"`
 	Response any    `json:"response"`
 }
 
-func (h *handler) configure(w http.ResponseWriter, r *http.Request) {
+func (h *handler) addResponse(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 
@@ -161,7 +177,7 @@ func logRequestContext(r *http.Request) string {
 	return requestInfo.String()
 }
 
-func (h *handler) list(w http.ResponseWriter, r *http.Request) {
+func (h *handler) getAllResponses(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 
