@@ -47,7 +47,7 @@ func TestHandleResponsesPost(t *testing.T) {
 
 	// when
 	httptestRecorder := httptest.NewRecorder()
-	httptestRequest := httptest.NewRequest(http.MethodPost, baseURLPath+responsesEndpoint, bytes.NewBuffer([]byte(`{"path": "/test", "response": {"foo": "bar"}}`)))
+	httptestRequest := httptest.NewRequest(http.MethodPost, baseURLPath+responsesEndpoint, bytes.NewBufferString(`{"path": "/test", "response": {"foo": "bar"}}`))
 	httptestRequest.Header.Set("Content-Type", "application/json")
 
 	// then
@@ -154,7 +154,91 @@ func TestListHandlerInvalidEndpointsMap(t *testing.T) {
 
 func TestLogRequestContext(t *testing.T) {
 	helperLogRequestContextBasicGetRequest(t)
-	// Test 1: Basic GET request
+
+	basicGETRequest(t)
+
+	requestWithHeaderIncludingAuthorization(t)
+
+	requestWithQueryParameters(t)
+
+	requestWithBody(t)
+
+	requestWithLargeBodyThatExceedsLimit(t)
+}
+
+func requestWithLargeBodyThatExceedsLimit(t *testing.T) {
+	t.Helper()
+	t.Run("Request with large body", func(t *testing.T) {
+		// Create a body that's larger than the 10KB limit
+		largeBody := strings.Repeat("X", 15*1024) // 15KB
+		req := httptest.NewRequest(http.MethodPost, "http://example.com/api/data", bytes.NewBufferString(largeBody))
+
+		result := logRequestContext(req)
+
+		// Verify body is truncated (should contain some of the X's but not all 15KB)
+		assertContains(t, result, "Body Content:")
+		assertContains(t, result, "X") // Should have some content
+
+		// The body in the result should be shorter than the original large body
+		bodyStartIndex := strings.Index(result, "Body Content:\n") + len("Body Content:\n")
+		bodyContent := result[bodyStartIndex:]
+		if len(bodyContent) >= len(largeBody) {
+			t.Errorf("Body was not limited: found %d bytes", len(bodyContent))
+		}
+	})
+}
+
+func requestWithBody(t *testing.T) {
+	t.Helper()
+	t.Run("Request with body", func(t *testing.T) {
+		body := `{"username":"testuser","password":"secret"}`
+		req := httptest.NewRequest(http.MethodPost, "http://example.com/api/login", bytes.NewBufferString(body))
+
+		result := logRequestContext(req)
+
+		// Verify body is logged
+		assertContains(t, result, "Body Content:")
+		assertContains(t, result, body)
+	})
+}
+
+func requestWithQueryParameters(t *testing.T) {
+	t.Helper()
+	t.Run("Request with query parameters", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "http://example.com/test?name=John&age=30&filter=active", nil)
+
+		result := logRequestContext(req)
+
+		// Verify query parameters are logged
+		assertContains(t, result, "Query Parameters:")
+		assertContains(t, result, "name: John")
+		assertContains(t, result, "age: 30")
+		assertContains(t, result, "filter: active")
+	})
+}
+
+func requestWithHeaderIncludingAuthorization(t *testing.T) {
+	t.Helper()
+	t.Run("Request with Authorization header", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "http://example.com/test", nil)
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer token123456")
+		req.Header.Set("X-Custom-Header", "custom-value")
+
+		result := logRequestContext(req)
+
+		// Verify regular headers are logged normally
+		assertContains(t, result, "Content-Type: application/json")
+		assertContains(t, result, "X-Custom-Header: custom-value")
+
+		// Verify Authorization header is redacted
+		assertContains(t, result, "Authorization: *****")
+		assertNotContains(t, result, "Bearer token123456")
+	})
+}
+
+func basicGETRequest(t *testing.T) {
+	t.Helper()
 	t.Run("logs basic request info", func(t *testing.T) {
 		// Setup test request
 		req := httptest.NewRequest(http.MethodGet, "http://example.com/test?param=value", nil)
@@ -192,69 +276,6 @@ func TestLogRequestContext(t *testing.T) {
 		}
 		if !strings.Contains(result, "param: value") {
 			t.Error("Missing query parameter in log")
-		}
-	})
-
-	// Test 2: Request with headers including Authorization
-	t.Run("Request with Authorization header", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "http://example.com/test", nil)
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer token123456")
-		req.Header.Set("X-Custom-Header", "custom-value")
-
-		result := logRequestContext(req)
-
-		// Verify regular headers are logged normally
-		assertContains(t, result, "Content-Type: application/json")
-		assertContains(t, result, "X-Custom-Header: custom-value")
-
-		// Verify Authorization header is redacted
-		assertContains(t, result, "Authorization: *****")
-		assertNotContains(t, result, "Bearer token123456")
-	})
-
-	// Test 3: Request with query parameters
-	t.Run("Request with query parameters", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "http://example.com/test?name=John&age=30&filter=active", nil)
-
-		result := logRequestContext(req)
-
-		// Verify query parameters are logged
-		assertContains(t, result, "Query Parameters:")
-		assertContains(t, result, "name: John")
-		assertContains(t, result, "age: 30")
-		assertContains(t, result, "filter: active")
-	})
-
-	// Test 4: Request with body
-	t.Run("Request with body", func(t *testing.T) {
-		body := `{"username":"testuser","password":"secret"}`
-		req := httptest.NewRequest(http.MethodPost, "http://example.com/api/login", bytes.NewBufferString(body))
-
-		result := logRequestContext(req)
-
-		// Verify body is logged
-		assertContains(t, result, "Body Content:")
-		assertContains(t, result, body)
-	})
-
-	// Test 5: Request with large body that exceeds limit
-	t.Run("Request with large body", func(t *testing.T) {
-		// Create a body that's larger than the 10KB limit
-		largeBody := strings.Repeat("X", 15*1024) // 15KB
-		req := httptest.NewRequest(http.MethodPost, "http://example.com/api/data", bytes.NewBufferString(largeBody))
-
-		result := logRequestContext(req)
-
-		// Verify body is truncated (should contain some of the X's but not all 15KB)
-		assertContains(t, result, "Body Content:")
-		assertContains(t, result, "X") // Should have some content
-
-		// The body in the result should be shorter than the original large body
-		bodyStartIndex := strings.Index(result, "Body Content:\n") + len("Body Content:\n")
-		bodyContent := result[bodyStartIndex:]
-		if len(bodyContent) >= len(largeBody) {
-			t.Errorf("Body was not limited: found %d bytes", len(bodyContent))
 		}
 	})
 }
@@ -335,8 +356,9 @@ func TestCompleteServerFlow(t *testing.T) {
 }
 
 // startTestServer creates and runs a test server with all handlers
-// returns an instance of the test server and a pointer to the handler for state verification
+// returns an instance of the test server and a pointer to the handler for state verification.
 func startTestServer(t *testing.T) (*httptest.Server, *handler) {
+	t.Helper()
 	h := newHandler()
 
 	// Define multiplexer for all paths

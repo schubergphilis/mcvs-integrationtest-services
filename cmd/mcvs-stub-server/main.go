@@ -66,7 +66,7 @@ func (h *handler) handleResponses(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *handler) deleteAllResponses(w http.ResponseWriter, r *http.Request) {
+func (h *handler) deleteAllResponses(w http.ResponseWriter, _ *http.Request) {
 	h.endpoints = map[string]any{}
 	w.WriteHeader(http.StatusOK)
 }
