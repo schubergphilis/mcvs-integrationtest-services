@@ -1,6 +1,7 @@
 ---
+version: "2"
 linters:
-  enable-all: true
+  default: all
   disable:
     - err113
     - exhaustruct
@@ -10,18 +11,40 @@ linters:
     - perfsprint
     - recvcheck
     - tagliatelle
-    - tenv
     - testifylint
     - testpackage
     - varnamelen
     - wrapcheck
     - wsl
-linters-settings:
-  depguard:
-    rules:
-      main:
-        deny:
-          - pkg: "log"
-            desc: Use 'log "github.com/sirupsen/logrus"' instead
-          - pkg: "github.com/pkg/errors"
-            desc: Should be replaced by standard lib errors package
+  settings:
+    depguard:
+      rules:
+        main:
+          deny:
+            - pkg: log
+              desc: Use 'log "github.com/sirupsen/logrus"' instead
+            - pkg: github.com/pkg/errors
+              desc: Should be replaced by standard lib errors package
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
