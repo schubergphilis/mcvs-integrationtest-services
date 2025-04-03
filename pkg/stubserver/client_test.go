@@ -215,7 +215,7 @@ func (s *StubServerTestSuite) TestSendRequestWithQueryParamsMatching() {
 	assert.NoError(s.T(), err)
 	defer resp.Body.Close()
 
-	assert.Equal(s.T(), http.StatusNotFound, resp.StatusCode)
+	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
 }
 
 func (s *StubServerTestSuite) TestSendRequestWithHeadersMatching() {
@@ -257,7 +257,7 @@ func (s *StubServerTestSuite) TestSendRequestWithHeadersMatching() {
 	assert.NoError(s.T(), err)
 	defer resp.Body.Close()
 
-	assert.Equal(s.T(), http.StatusNotFound, resp.StatusCode)
+	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
 }
 
 func (s *StubServerTestSuite) TestSendRequestWithBothHeadersAndQueryParams() {
@@ -300,7 +300,7 @@ func (s *StubServerTestSuite) TestSendRequestWithBothHeadersAndQueryParams() {
 	assert.NoError(s.T(), err)
 	defer resp.Body.Close()
 
-	assert.Equal(s.T(), http.StatusNotFound, resp.StatusCode)
+	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
 }
 
 func (s *StubServerTestSuite) TestSendRequestWithBody() {
@@ -346,7 +346,6 @@ func (s *StubServerTestSuite) TestSendRequestWithBody() {
 }
 
 func (s *StubServerTestSuite) TestClientWithInvalidBaseURL() {
-	// Tworzymy nowego klienta z nieprawidłowym URL (nie używamy tego z suite)
 	client := stub_server_client.NewClient("http://localhost:99999", nil)
 
 	err := client.HealthCheck()

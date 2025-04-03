@@ -121,12 +121,12 @@ func (rm *ResponseManager) MatchEndpoint(ei *EndpointID) (*EndpointConfiguration
 	rm.mu.RLock()
 	defer rm.mu.RUnlock()
 	endpointsScoring := make(map[int]*EndpointConfiguration)
-	maxScore := 0
+	maxScore := -1
 	for _, endpoint := range rm.endpoints {
 		if endpoint.EndpointID.Path == ei.Path && endpoint.EndpointID.HTTPMethod == ei.HTTPMethod {
 			currentScore := calculateMatch(&endpoint, ei)
 			if _, exists := endpointsScoring[currentScore]; exists {
-				return nil, fmt.Errorf("can't match endpoint: %s, to many matches", GetID(&endpoint.EndpointID))
+				return nil, fmt.Errorf("can't match for request: %s, to many matches", GetID(&endpoint.EndpointID))
 			}
 			endpointsScoring[currentScore] = &endpoint
 			if currentScore > maxScore {
@@ -134,6 +134,11 @@ func (rm *ResponseManager) MatchEndpoint(ei *EndpointID) (*EndpointConfiguration
 			}
 		}
 	}
+
+	if maxScore == -1 {
+		return nil, fmt.Errorf("no endpoints matched the given request: %s", ei.Path)
+	}
+
 	return endpointsScoring[maxScore], nil
 }
 
@@ -154,6 +159,7 @@ func calculateMatch(ec *EndpointConfiguration, ei *EndpointID) int {
 			}
 		}
 	}
+	fmt.Println("counter ", counter, " , for", ei)
 
 	return counter
 }
