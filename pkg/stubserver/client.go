@@ -1,7 +1,9 @@
+// stubserver package provides a client for interacting with a stub server.
 package stubserver
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -28,18 +30,47 @@ func NewClient(baseURL string, httpClient *http.Client) *Client {
 	}
 }
 
-// HealthCheck checks if the stub server is healthy.
-func (c *Client) HealthCheck() error {
-	resp, err := c.httpClient.Get(fmt.Sprintf("%s%s", c.baseURL, HealthEndpoint))
+// doRequest is a private helper method to execute HTTP requests
+func (c *Client) doRequest(ctx context.Context, method, url string, body io.Reader, headers map[string]string) (*http.Response, error) {
+	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
-		return fmt.Errorf("failed to perform health check: %w", err)
+		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
-	defer func() {
+
+	// Add headers if provided
+	if headers != nil {
+		for key, value := range headers {
+			req.Header.Set(key, value)
+		}
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute request: %w", err)
+	}
+
+	return resp, nil
+}
+
+// closeResponseBody safely closes the response body
+func closeResponseBody(resp *http.Response) {
+	if resp != nil && resp.Body != nil {
 		err := resp.Body.Close()
 		if err != nil {
 			log.Println("failed to close response body")
 		}
-	}()
+	}
+}
+
+// HealthCheck checks if the stub server is healthy.
+func (c *Client) HealthCheck(ctx context.Context) error {
+	url := fmt.Sprintf("%s%s", c.baseURL, HealthEndpoint)
+
+	resp, err := c.doRequest(ctx, http.MethodGet, url, nil, nil)
+	if err != nil {
+		return fmt.Errorf("failed to perform health check: %w", err)
+	}
+	defer closeResponseBody(resp)
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("unhealthy status code: %d", resp.StatusCode)
@@ -49,26 +80,20 @@ func (c *Client) HealthCheck() error {
 }
 
 // AddResponse adds a new response to the stub server.
-func (c *Client) AddResponse(request EndpointRequest) error {
+func (c *Client) AddResponse(ctx context.Context, request EndpointRequest) error {
 	data, err := json.Marshal(request)
 	if err != nil {
 		return fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	resp, err := c.httpClient.Post(
-		fmt.Sprintf("%s%s%s", c.baseURL, BaseURLPath, ResponsesEndpoint),
-		"application/json",
-		bytes.NewBuffer(data),
-	)
+	url := fmt.Sprintf("%s%s%s", c.baseURL, BaseURLPath, ResponsesEndpoint)
+	headers := map[string]string{"Content-Type": "application/json"}
+
+	resp, err := c.doRequest(ctx, http.MethodPost, url, bytes.NewBuffer(data), headers)
 	if err != nil {
 		return fmt.Errorf("failed to add response: %w", err)
 	}
-	defer func() {
-		err := resp.Body.Close()
-		if err != nil {
-			log.Println("failed to close response body")
-		}
-	}()
+	defer closeResponseBody(resp)
 
 	if resp.StatusCode != http.StatusOK {
 		var errorResp ErrorResponse
@@ -83,17 +108,14 @@ func (c *Client) AddResponse(request EndpointRequest) error {
 }
 
 // GetAllResponses retrieves all responses from the stub server.
-func (c *Client) GetAllResponses() ([]EndpointResponse, error) {
-	resp, err := c.httpClient.Get(fmt.Sprintf("%s%s%s", c.baseURL, BaseURLPath, ResponsesEndpoint))
+func (c *Client) GetAllResponses(ctx context.Context) ([]EndpointResponse, error) {
+	url := fmt.Sprintf("%s%s%s", c.baseURL, BaseURLPath, ResponsesEndpoint)
+
+	resp, err := c.doRequest(ctx, http.MethodGet, url, nil, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get responses: %w", err)
 	}
-	defer func() {
-		err := resp.Body.Close()
-		if err != nil {
-			log.Println("failed to close response body")
-		}
-	}()
+	defer closeResponseBody(resp)
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("failed with status code %d", resp.StatusCode)
@@ -108,22 +130,14 @@ func (c *Client) GetAllResponses() ([]EndpointResponse, error) {
 }
 
 // DeleteAllResponses deletes all responses from the stub server.
-func (c *Client) DeleteAllResponses() error {
-	req, err := http.NewRequest(http.MethodDelete, fmt.Sprintf("%s%s%s", c.baseURL, BaseURLPath, ResponsesEndpoint), nil)
-	if err != nil {
-		return fmt.Errorf("failed to create request: %w", err)
-	}
+func (c *Client) DeleteAllResponses(ctx context.Context) error {
+	url := fmt.Sprintf("%s%s%s", c.baseURL, BaseURLPath, ResponsesEndpoint)
 
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(ctx, http.MethodDelete, url, nil, nil)
 	if err != nil {
 		return fmt.Errorf("failed to delete responses: %w", err)
 	}
-	defer func() {
-		err := resp.Body.Close()
-		if err != nil {
-			log.Println("failed to close response body")
-		}
-	}()
+	defer closeResponseBody(resp)
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("failed with status code %d", resp.StatusCode)
@@ -133,7 +147,7 @@ func (c *Client) DeleteAllResponses() error {
 }
 
 // SendRequest sends a request to a configured endpoint.
-func (c *Client) SendRequest(method, path string, queryParams, headers map[string]string, body io.Reader) (*http.Response, error) {
+func (c *Client) SendRequest(ctx context.Context, method, path string, queryParams, headers map[string]string, body io.Reader) (*http.Response, error) {
 	urlStr := fmt.Sprintf("%s%s", c.baseURL, path)
 	parsedURL, err := url.Parse(urlStr)
 	if err != nil {
@@ -148,16 +162,7 @@ func (c *Client) SendRequest(method, path string, queryParams, headers map[strin
 		parsedURL.RawQuery = q.Encode()
 	}
 
-	req, err := http.NewRequest(method, parsedURL.String(), body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
-	}
-
-	for key, value := range headers {
-		req.Header.Add(key, value)
-	}
-
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(ctx, method, parsedURL.String(), body, headers)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send request: %w", err)
 	}

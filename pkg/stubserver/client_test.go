@@ -38,7 +38,7 @@ func TestStubServerSuite(t *testing.T) {
 }
 
 func (s *StubServerTestSuite) TestHealthCheck() {
-	err := s.client.HealthCheck()
+	err := s.client.HealthCheck(s.T().Context())
 	assert.NoError(s.T(), err)
 }
 
@@ -51,10 +51,10 @@ func (s *StubServerTestSuite) TestAddResponse() {
 		ResponseHeaders:    map[string]string{"Content-Type": "text/plain"},
 	}
 
-	err := s.client.AddResponse(testRequest)
+	err := s.client.AddResponse(s.T().Context(), testRequest)
 	assert.NoError(s.T(), err)
 
-	responses, err := s.client.GetAllResponses()
+	responses, err := s.client.GetAllResponses(s.T().Context())
 	assert.NoError(s.T(), err)
 	assert.Len(s.T(), responses, 1)
 	assert.Equal(s.T(), testRequest.Path, responses[0].Path)
@@ -99,7 +99,7 @@ func (s *StubServerTestSuite) TestAddResponseWithInvalidData() {
 
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
-			err := s.client.AddResponse(tc.request)
+			err := s.client.AddResponse(s.T().Context(), tc.request)
 			assert.Error(t, err)
 			assert.Contains(t, err.Error(), tc.errorContains)
 		})
@@ -114,10 +114,10 @@ func (s *StubServerTestSuite) TestAddDuplicateEndpoint() {
 		ResponseStatusCode: http.StatusOK,
 	}
 
-	err := s.client.AddResponse(testRequest)
+	err := s.client.AddResponse(s.T().Context(), testRequest)
 	assert.NoError(s.T(), err)
 
-	err = s.client.AddResponse(testRequest)
+	err = s.client.AddResponse(s.T().Context(), testRequest)
 	assert.Error(s.T(), err)
 	assert.Contains(s.T(), err.Error(), "endpoint already exists")
 }
@@ -139,11 +139,11 @@ func (s *StubServerTestSuite) TestGetAllResponses() {
 	}
 
 	for _, resp := range responses {
-		err := s.client.AddResponse(resp)
+		err := s.client.AddResponse(s.T().Context(), resp)
 		assert.NoError(s.T(), err)
 	}
 
-	retrievedResponses, err := s.client.GetAllResponses()
+	retrievedResponses, err := s.client.GetAllResponses(s.T().Context())
 	assert.NoError(s.T(), err)
 	assert.Len(s.T(), retrievedResponses, 2)
 
@@ -160,17 +160,17 @@ func (s *StubServerTestSuite) TestDeleteAllResponses() {
 		ResponseStatusCode: http.StatusOK,
 	}
 
-	err := s.client.AddResponse(testRequest)
+	err := s.client.AddResponse(s.T().Context(), testRequest)
 	assert.NoError(s.T(), err)
 
-	responses, err := s.client.GetAllResponses()
+	responses, err := s.client.GetAllResponses(s.T().Context())
 	assert.NoError(s.T(), err)
 	assert.Len(s.T(), responses, 1)
 
-	err = s.client.DeleteAllResponses()
+	err = s.client.DeleteAllResponses(s.T().Context())
 	assert.NoError(s.T(), err)
 
-	responses, err = s.client.GetAllResponses()
+	responses, err = s.client.GetAllResponses(s.T().Context())
 	assert.NoError(s.T(), err)
 	assert.Len(s.T(), responses, 0)
 }
@@ -185,10 +185,10 @@ func (s *StubServerTestSuite) TestSendRequestWithQueryParamsMatching() {
 		ResponseStatusCode: http.StatusOK,
 	}
 
-	err := s.client.AddResponse(testRequest)
+	err := s.client.AddResponse(s.T().Context(), testRequest)
 	assert.NoError(s.T(), err)
 
-	resp, err := s.client.SendRequest(
+	resp, err := s.client.SendRequest(s.T().Context(),
 		http.MethodGet,
 		"/api/v1/products",
 		map[string]string{"page": "3", "limit": "25"},
@@ -205,7 +205,7 @@ func (s *StubServerTestSuite) TestSendRequestWithQueryParamsMatching() {
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), `{"items":[],"page":3,"limit":25,"total":100}`, string(body))
 
-	resp, err = s.client.SendRequest(
+	resp, err = s.client.SendRequest(s.T().Context(),
 		http.MethodGet,
 		"/api/v1/products",
 		map[string]string{"page": "2", "limit": "25"},
@@ -228,10 +228,10 @@ func (s *StubServerTestSuite) TestSendRequestWithHeadersMatching() {
 		ResponseStatusCode: http.StatusOK,
 	}
 
-	err := s.client.AddResponse(testRequest)
+	err := s.client.AddResponse(s.T().Context(), testRequest)
 	assert.NoError(s.T(), err)
 
-	resp, err := s.client.SendRequest(
+	resp, err := s.client.SendRequest(s.T().Context(),
 		http.MethodGet,
 		"/api/v1/users",
 		nil,
@@ -247,7 +247,7 @@ func (s *StubServerTestSuite) TestSendRequestWithHeadersMatching() {
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), `{"users":[],"page":2,"per_page":50,"total":150}`, string(body))
 
-	resp, err = s.client.SendRequest(
+	resp, err = s.client.SendRequest(s.T().Context(),
 		http.MethodGet,
 		"/api/v1/users",
 		nil,
@@ -271,10 +271,10 @@ func (s *StubServerTestSuite) TestSendRequestWithBothHeadersAndQueryParams() {
 		ResponseStatusCode: http.StatusOK,
 	}
 
-	err := s.client.AddResponse(testRequest)
+	err := s.client.AddResponse(s.T().Context(), testRequest)
 	assert.NoError(s.T(), err)
 
-	resp, err := s.client.SendRequest(
+	resp, err := s.client.SendRequest(s.T().Context(),
 		http.MethodGet,
 		"/api/v1/orders",
 		map[string]string{"sort": "created_at", "order": "desc"},
@@ -290,7 +290,7 @@ func (s *StubServerTestSuite) TestSendRequestWithBothHeadersAndQueryParams() {
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), `{"orders":[],"page":1,"per_page":100,"sort":"created_at","order":"desc"}`, string(body))
 
-	resp, err = s.client.SendRequest(
+	resp, err = s.client.SendRequest(s.T().Context(),
 		http.MethodGet,
 		"/api/v1/orders",
 		map[string]string{"sort": "created_at", "order": "asc"},
@@ -312,7 +312,7 @@ func (s *StubServerTestSuite) TestSendRequestWithBody() {
 		ResponseStatusCode: http.StatusCreated,
 	}
 
-	err := s.client.AddResponse(createUserRequest)
+	err := s.client.AddResponse(s.T().Context(), createUserRequest)
 	assert.NoError(s.T(), err)
 
 	requestBody := map[string]string{
@@ -322,7 +322,7 @@ func (s *StubServerTestSuite) TestSendRequestWithBody() {
 	jsonBody, err := json.Marshal(requestBody)
 	assert.NoError(s.T(), err)
 
-	resp, err := s.client.SendRequest(
+	resp, err := s.client.SendRequest(s.T().Context(),
 		http.MethodPost,
 		"/api/users",
 		nil,
@@ -348,24 +348,24 @@ func (s *StubServerTestSuite) TestSendRequestWithBody() {
 func (s *StubServerTestSuite) TestClientWithInvalidBaseURL() {
 	client := stub_server_client.NewClient("http://localhost:99999", nil)
 
-	err := client.HealthCheck()
+	err := client.HealthCheck(s.T().Context())
 	assert.Error(s.T(), err)
-	assert.Contains(s.T(), err.Error(), "failed to perform health check")
+	assert.Contains(s.T(), err, "failed to perform health check")
 
-	_, err = client.GetAllResponses()
+	_, err = client.GetAllResponses(s.T().Context())
 	assert.Error(s.T(), err)
 	assert.Contains(s.T(), err.Error(), "failed to get responses")
 
-	err = client.DeleteAllResponses()
+	err = client.DeleteAllResponses(s.T().Context())
 	assert.Error(s.T(), err)
-	assert.Contains(s.T(), err.Error(), "failed to delete responses")
+	assert.Contains(s.T(), err, "failed to delete responses")
 
-	err = client.AddResponse(stub_server_client.EndpointRequest{
+	err = client.AddResponse(s.T().Context(), stub_server_client.EndpointRequest{
 		Path:               "/test",
 		HTTPMethod:         http.MethodGet,
 		ResponseBody:       "test",
 		ResponseStatusCode: http.StatusOK,
 	})
 	assert.Error(s.T(), err)
-	assert.Contains(s.T(), err.Error(), "failed to add response")
+	assert.Contains(s.T(), err, "failed to add response")
 }
