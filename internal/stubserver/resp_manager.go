@@ -159,7 +159,6 @@ func calculateMatch(ec *EndpointConfiguration, ei *EndpointID) int {
 			}
 		}
 	}
-	fmt.Println("counter ", counter, " , for", ei)
 
 	return counter
 }

@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // Client represents an HTTP client for the stub server.
@@ -74,6 +75,7 @@ func (c *Client) AddResponse(request EndpointRequest) error {
 		if err := json.NewDecoder(resp.Body).Decode(&errorResp); err != nil {
 			return fmt.Errorf("failed with status code %d", resp.StatusCode)
 		}
+
 		return fmt.Errorf("failed to add response: %s", errorResp.Error)
 	}
 
@@ -132,7 +134,6 @@ func (c *Client) DeleteAllResponses() error {
 
 // SendRequest sends a request to a configured endpoint.
 func (c *Client) SendRequest(method, path string, queryParams, headers map[string]string, body io.Reader) (*http.Response, error) {
-
 	urlStr := fmt.Sprintf("%s%s", c.baseURL, path)
 	parsedURL, err := url.Parse(urlStr)
 	if err != nil {

@@ -121,21 +121,14 @@ func (s *Server) catchAll(c *gin.Context) {
 		QueryParamsToMatch: flattenQueryParams(c),
 		HeadersToMatch:     flattenHeaders(c),
 	}
-	fmt.Println("++++++++++++++++++++++++++++++++++++++")
-	fmt.Println("====================== QueryParamsToMatch")
-	fmt.Println(endpointID.QueryParamsToMatch)
-	fmt.Println("======================= HeadersToMatch")
-	fmt.Println(endpointID.HeadersToMatch)
 
 	config, err := s.responseManager.MatchEndpoint(&endpointID)
-	fmt.Println("error:  ", err)
 	if err != nil {
 		log.WithFields(log.Fields{"urlPath": c.Request.URL.Path}).Error("endpoint not found")
 		c.Status(http.StatusNotFound)
 
 		return
 	}
-	fmt.Println("++++++++++++++++++++++++++++++++++++++")
 
 	// 1. Set response headers
 	for key, value := range config.ResponseHeaders {
