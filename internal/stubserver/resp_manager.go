@@ -117,6 +117,47 @@ func (rm *ResponseManager) AddEndpoint(ec EndpointConfiguration) error {
 	return nil
 }
 
+func (rm *ResponseManager) MatchEndpoint(ei *EndpointID) (*EndpointConfiguration, error) {
+	rm.mu.RLock()
+	defer rm.mu.RUnlock()
+	endpointsScoring := make(map[int]*EndpointConfiguration)
+	maxScore := 0
+	for _, endpoint := range rm.endpoints {
+		if endpoint.EndpointID.Path == ei.Path && endpoint.EndpointID.HTTPMethod == ei.HTTPMethod {
+			currentScore := calculateMatch(&endpoint, ei)
+			if _, exists := endpointsScoring[currentScore]; exists {
+				return nil, fmt.Errorf("can't match endpoint: %s, to many matches", GetID(&endpoint.EndpointID))
+			}
+			endpointsScoring[currentScore] = &endpoint
+			if currentScore > maxScore {
+				maxScore = currentScore
+			}
+		}
+	}
+	return endpointsScoring[maxScore], nil
+}
+
+func calculateMatch(ec *EndpointConfiguration, ei *EndpointID) int {
+	counter := 0
+	for eiQueryParamToMatchName, eiQueryParamToMatchValue := range ei.QueryParamsToMatch {
+		for queryParamToMatchName, queryParamToMatchValue := range ec.EndpointID.QueryParamsToMatch {
+			if queryParamToMatchName == eiQueryParamToMatchName && queryParamToMatchValue == eiQueryParamToMatchValue {
+				counter++
+			}
+		}
+	}
+
+	for eiHeadersToMatchName, eiHeadersToMatchValue := range ei.HeadersToMatch {
+		for headerToMatchName, headerToMatchValue := range ec.EndpointID.HeadersToMatch {
+			if headerToMatchName == eiHeadersToMatchName && headerToMatchValue == eiHeadersToMatchValue {
+				counter++
+			}
+		}
+	}
+
+	return counter
+}
+
 // GetEndpointByEndpointID retrieves the configuration for a given endpoint.
 func (rm *ResponseManager) GetEndpointByEndpointID(ei *EndpointID) (EndpointConfiguration, error) {
 	rm.mu.RLock()

@@ -8,14 +8,8 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	stub_server_client "github.com/schubergphilis/mcvs-integrationtest-services/pkg/stubserver"
+	stubserverclient "github.com/schubergphilis/mcvs-integrationtest-services/pkg/stubserver"
 	log "github.com/sirupsen/logrus"
-)
-
-const (
-	baseURLPath       = "/stubserver"
-	healthEndpoint    = "/health"
-	responsesEndpoint = "/responses"
 )
 
 const (
@@ -38,10 +32,10 @@ func NewServer() *Server {
 		responseManager: responseManager,
 	}
 
-	router.GET(healthEndpoint, server.health)
-	router.POST(baseURLPath+responsesEndpoint, server.addResponse)
-	router.GET(baseURLPath+responsesEndpoint, server.getAllResponses)
-	router.DELETE(baseURLPath+responsesEndpoint, server.deleteAllResponses)
+	router.GET(stubserverclient.HealthEndpoint, server.health)
+	router.POST(stubserverclient.BaseURLPath+stubserverclient.ResponsesEndpoint, server.addResponse)
+	router.GET(stubserverclient.BaseURLPath+stubserverclient.ResponsesEndpoint, server.getAllResponses)
+	router.DELETE(stubserverclient.BaseURLPath+stubserverclient.ResponsesEndpoint, server.deleteAllResponses)
 
 	router.NoRoute(server.catchAll)
 
@@ -53,21 +47,21 @@ func (s *Server) health(c *gin.Context) {
 }
 
 func (s *Server) addResponse(c *gin.Context) {
-	var request stub_server_client.EndpointRequest
+	var request stubserverclient.EndpointRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, stub_server_client.ErrorResponse{Error: "Invalid request body"})
+		c.JSON(http.StatusBadRequest, stubserverclient.ErrorResponse{Error: "Invalid request body"})
 
 		return
 	}
 
 	if request.Path == "" || request.HTTPMethod == "" {
-		c.JSON(http.StatusBadRequest, stub_server_client.ErrorResponse{Error: "Path and HTTP method are required"})
+		c.JSON(http.StatusBadRequest, stubserverclient.ErrorResponse{Error: "Path and HTTP method are required"})
 
 		return
 	}
 
 	if request.ResponseBody == "" {
-		c.JSON(http.StatusBadRequest, stub_server_client.ErrorResponse{Error: "Response body is required"})
+		c.JSON(http.StatusBadRequest, stubserverclient.ErrorResponse{Error: "Response body is required"})
 
 		return
 	}
@@ -86,7 +80,7 @@ func (s *Server) addResponse(c *gin.Context) {
 
 	err := s.responseManager.AddEndpoint(endpointConfig)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, stub_server_client.ErrorResponse{Error: err.Error()})
+		c.JSON(http.StatusBadRequest, stubserverclient.ErrorResponse{Error: err.Error()})
 
 		return
 	}
@@ -97,9 +91,9 @@ func (s *Server) addResponse(c *gin.Context) {
 func (s *Server) getAllResponses(c *gin.Context) {
 	configs := s.responseManager.GetAllEndpointConfigurations()
 
-	responses := make([]stub_server_client.EndpointResponse, 0, len(configs))
+	responses := make([]stubserverclient.EndpointResponse, 0, len(configs))
 	for _, config := range configs {
-		responses = append(responses, stub_server_client.EndpointResponse{
+		responses = append(responses, stubserverclient.EndpointResponse{
 			Path:               config.EndpointID.Path,
 			HTTPMethod:         config.EndpointID.HTTPMethod,
 			QueryParamsToMatch: config.EndpointID.QueryParamsToMatch,
@@ -110,7 +104,7 @@ func (s *Server) getAllResponses(c *gin.Context) {
 		})
 	}
 
-	c.JSON(http.StatusOK, stub_server_client.EndpointListResponse{Endpoints: responses})
+	c.JSON(http.StatusOK, stubserverclient.EndpointListResponse{Endpoints: responses})
 }
 
 func (s *Server) deleteAllResponses(c *gin.Context) {
@@ -127,8 +121,12 @@ func (s *Server) catchAll(c *gin.Context) {
 		QueryParamsToMatch: flattenQueryParams(c),
 		HeadersToMatch:     flattenHeaders(c),
 	}
+	fmt.Println("====================== QueryParamsToMatch")
+	fmt.Println(endpointID.QueryParamsToMatch)
+	fmt.Println("======================= HeadersToMatch")
+	fmt.Println(endpointID.HeadersToMatch)
 
-	config, err := s.responseManager.GetEndpointByEndpointID(&endpointID)
+	config, err := s.responseManager.MatchEndpoint(&endpointID)
 	if err != nil {
 		log.WithFields(log.Fields{"urlPath": c.Request.URL.Path}).Error("endpoint not found")
 		c.Status(http.StatusNotFound)
