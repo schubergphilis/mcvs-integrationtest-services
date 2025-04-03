@@ -9,10 +9,8 @@ import (
 )
 
 func main() {
-	// Create a new server
 	server := stubserver.NewServer()
 
-	// Start server
 	httpServer := &http.Server{
 		Addr:              ":8080",
 		Handler:           server.Router,
