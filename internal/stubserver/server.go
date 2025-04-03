@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	stub_server_client "github.com/schubergphilis/mcvs-integrationtest-services/pkg/stubserver"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -20,38 +21,6 @@ const (
 const (
 	maxBodySizeBytes = 1024 * 10
 )
-
-// EndpointRequest represents the request body for adding a new endpoint.
-type EndpointRequest struct {
-	Path               string            `json:"path"`
-	HTTPMethod         string            `json:"httpMethod"`
-	QueryParamsToMatch map[string]string `json:"queryParamsToMatch,omitempty"`
-	HeadersToMatch     map[string]string `json:"headersToMatch,omitempty"`
-	ResponseHeaders    map[string]string `json:"responseHeaders,omitempty"`
-	ResponseBody       string            `json:"responseBody"`
-	ResponseStatusCode int               `json:"responseStatusCode"`
-}
-
-// EndpointListResponse EndpointListRequest represents the request body for listing endpoints.
-type EndpointListResponse struct {
-	Endpoints []EndpointResponse `json:"endpoints"`
-}
-
-// EndpointResponse represents the response body for an endpoint.
-type EndpointResponse struct {
-	Path               string            `json:"path"`
-	HTTPMethod         string            `json:"httpMethod"`
-	QueryParamsToMatch map[string]string `json:"queryParamsToMatch,omitempty"`
-	HeadersToMatch     map[string]string `json:"headersToMatch,omitempty"`
-	ResponseHeaders    map[string]string `json:"responseHeaders,omitempty"`
-	ResponseBody       string            `json:"responseBody"`
-	ResponseStatusCode int               `json:"responseStatusCode"`
-}
-
-// ErrorResponse represents the error response body.
-type ErrorResponse struct {
-	Error string `json:"error"`
-}
 
 // Server represents the Gin HTTP server with router and handler.
 type Server struct {
@@ -84,21 +53,21 @@ func (s *Server) health(c *gin.Context) {
 }
 
 func (s *Server) addResponse(c *gin.Context) {
-	var request EndpointRequest
+	var request stub_server_client.EndpointRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid request body"})
+		c.JSON(http.StatusBadRequest, stub_server_client.ErrorResponse{Error: "Invalid request body"})
 
 		return
 	}
 
 	if request.Path == "" || request.HTTPMethod == "" {
-		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Path and HTTP method are required"})
+		c.JSON(http.StatusBadRequest, stub_server_client.ErrorResponse{Error: "Path and HTTP method are required"})
 
 		return
 	}
 
 	if request.ResponseBody == "" {
-		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Response body is required"})
+		c.JSON(http.StatusBadRequest, stub_server_client.ErrorResponse{Error: "Response body is required"})
 
 		return
 	}
@@ -117,7 +86,7 @@ func (s *Server) addResponse(c *gin.Context) {
 
 	err := s.responseManager.AddEndpoint(endpointConfig)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+		c.JSON(http.StatusBadRequest, stub_server_client.ErrorResponse{Error: err.Error()})
 
 		return
 	}
@@ -128,9 +97,9 @@ func (s *Server) addResponse(c *gin.Context) {
 func (s *Server) getAllResponses(c *gin.Context) {
 	configs := s.responseManager.GetAllEndpointConfigurations()
 
-	responses := make([]EndpointResponse, 0, len(configs))
+	responses := make([]stub_server_client.EndpointResponse, 0, len(configs))
 	for _, config := range configs {
-		responses = append(responses, EndpointResponse{
+		responses = append(responses, stub_server_client.EndpointResponse{
 			Path:               config.EndpointID.Path,
 			HTTPMethod:         config.EndpointID.HTTPMethod,
 			QueryParamsToMatch: config.EndpointID.QueryParamsToMatch,
@@ -141,7 +110,7 @@ func (s *Server) getAllResponses(c *gin.Context) {
 		})
 	}
 
-	c.JSON(http.StatusOK, EndpointListResponse{Endpoints: responses})
+	c.JSON(http.StatusOK, stub_server_client.EndpointListResponse{Endpoints: responses})
 }
 
 func (s *Server) deleteAllResponses(c *gin.Context) {
