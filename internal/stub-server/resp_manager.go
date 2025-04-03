@@ -2,6 +2,7 @@ package stubserver
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"sync"
 )
@@ -39,14 +40,28 @@ type EndpointConfiguration struct {
 func GetID(ei *EndpointID) string {
 	builder := strings.Builder{}
 	builder.WriteString(fmt.Sprintf("%s:%s", ei.Path, ei.HTTPMethod))
-	for nameOfHeaderToMatch, valueOfHeaderToMatch := range ei.HeadersToMatch {
-		builder.WriteString(fmt.Sprintf(":%s=%s", nameOfHeaderToMatch, valueOfHeaderToMatch))
+
+	headerKeys := make([]string, 0, len(ei.HeadersToMatch))
+	for key := range ei.HeadersToMatch {
+		headerKeys = append(headerKeys, key)
 	}
-	for nameOfQueryParamToMatch, valueOfQueryParamToMatch := range ei.QueryParamsToMatch {
-		builder.WriteString(fmt.Sprintf(":%s=%s", nameOfQueryParamToMatch, valueOfQueryParamToMatch))
+	sort.Strings(headerKeys)
+
+	for _, key := range headerKeys {
+		builder.WriteString(fmt.Sprintf(":%s=%s", key, ei.HeadersToMatch[key]))
 	}
 
-	return builder.String()
+	queryKeys := make([]string, 0, len(ei.QueryParamsToMatch))
+	for key := range ei.QueryParamsToMatch {
+		queryKeys = append(queryKeys, key)
+	}
+	sort.Strings(queryKeys)
+
+	for _, key := range queryKeys {
+		builder.WriteString(fmt.Sprintf(":%s=%s", key, ei.QueryParamsToMatch[key]))
+	}
+
+	return strings.ToLower(builder.String())
 }
 
 // ValidateEndpoint valid endpoint configuration.

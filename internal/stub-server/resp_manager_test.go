@@ -1,6 +1,7 @@
 package stubserver
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -27,63 +28,7 @@ func TestGetID(t *testing.T) {
 				QueryParamsToMatch: map[string]string{},
 				HeadersToMatch:     map[string]string{},
 			},
-			expected: "/api/v1/test:GET",
-		},
-		{
-			name: "with headers",
-			endpoint: EndpointID{
-				Path:               "/api/v1/users",
-				HTTPMethod:         "POST",
-				QueryParamsToMatch: map[string]string{},
-				HeadersToMatch:     map[string]string{"Content-Type": "application/json"},
-			},
-			expected: "/api/v1/users:POST:Content-Type=application/json",
-		},
-		{
-			name: "with query params",
-			endpoint: EndpointID{
-				Path:               "/api/v1/search",
-				HTTPMethod:         "GET",
-				QueryParamsToMatch: map[string]string{"q": "test"},
-				HeadersToMatch:     map[string]string{},
-			},
-			expected: "/api/v1/search:GET:q=test",
-		},
-		{
-			name: "with both headers and params",
-			endpoint: EndpointID{
-				Path:               "/api/v1/products",
-				HTTPMethod:         "GET",
-				QueryParamsToMatch: map[string]string{"category": "electronics", "sort": "price"},
-				HeadersToMatch:     map[string]string{"Authorization": "Bearer token", "Accept": "application/json"},
-			},
-			expected: "/api/v1/products:GET:Authorization=Bearer token:Accept=application/json:category=electronics:sort=price",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := GetID(&tt.endpoint)
-			assert.Equal(t, tt.expected, result)
-		})
-	}
-}
-
-func TestGetId(t *testing.T) {
-	tests := []struct {
-		name     string
-		endpoint EndpointID
-		expected string
-	}{
-		{
-			name: "empty headers and params",
-			endpoint: EndpointID{
-				Path:               "/api/v1/test",
-				HTTPMethod:         "GET",
-				QueryParamsToMatch: map[string]string{},
-				HeadersToMatch:     map[string]string{},
-			},
-			expected: "/api/v1/test:GET",
+			expected: strings.ToLower("/api/v1/test:GET"),
 		},
 		{
 			name: "pagination in headers",
@@ -93,7 +38,7 @@ func TestGetId(t *testing.T) {
 				QueryParamsToMatch: map[string]string{},
 				HeadersToMatch:     map[string]string{"X-Page": "2", "X-Per-Page": "50"},
 			},
-			expected: "/api/v1/users:GET:X-Page=2:X-Per-Page=50",
+			expected: strings.ToLower("/api/v1/users:GET:X-Page=2:X-Per-Page=50"),
 		},
 		{
 			name: "pagination in query params",
@@ -103,7 +48,7 @@ func TestGetId(t *testing.T) {
 				QueryParamsToMatch: map[string]string{"page": "3", "limit": "25"},
 				HeadersToMatch:     map[string]string{},
 			},
-			expected: "/api/v1/products:GET:page=3:limit=25",
+			expected: strings.ToLower("/api/v1/products:GET:limit=25:page=3"),
 		},
 		{
 			name: "sorting in query params with pagination in headers",
@@ -113,7 +58,7 @@ func TestGetId(t *testing.T) {
 				QueryParamsToMatch: map[string]string{"sort": "created_at", "order": "desc"},
 				HeadersToMatch:     map[string]string{"X-Page": "1", "X-Per-Page": "100"},
 			},
-			expected: "/api/v1/orders:GET:X-Page=1:X-Per-Page=100:sort=created_at:order=desc",
+			expected: strings.ToLower("/api/v1/orders:GET:X-Page=1:X-Per-Page=100:order=desc:sort=created_at"),
 		},
 	}
 
