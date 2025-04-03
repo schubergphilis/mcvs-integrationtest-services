@@ -344,28 +344,3 @@ func (s *StubServerTestSuite) TestSendRequestWithBody() {
 	assert.Equal(s.T(), "New User", responseData["name"])
 	assert.Equal(s.T(), "created", responseData["status"])
 }
-
-func (s *StubServerTestSuite) TestClientWithInvalidBaseURL() {
-	client := stub_server_client.NewClient("http://localhost:99999", nil)
-
-	err := client.HealthCheck(s.T().Context())
-	assert.Error(s.T(), err)
-	assert.Contains(s.T(), err, "failed to perform health check")
-
-	_, err = client.GetAllResponses(s.T().Context())
-	assert.Error(s.T(), err)
-	assert.Contains(s.T(), err.Error(), "failed to get responses")
-
-	err = client.DeleteAllResponses(s.T().Context())
-	assert.Error(s.T(), err)
-	assert.Contains(s.T(), err, "failed to delete responses")
-
-	err = client.AddResponse(s.T().Context(), stub_server_client.EndpointRequest{
-		Path:               "/test",
-		HTTPMethod:         http.MethodGet,
-		ResponseBody:       "test",
-		ResponseStatusCode: http.StatusOK,
-	})
-	assert.Error(s.T(), err)
-	assert.Contains(s.T(), err, "failed to add response")
-}

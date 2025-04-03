@@ -24,24 +24,21 @@ func NewClient(baseURL string, httpClient *http.Client) *Client {
 	if httpClient == nil {
 		httpClient = http.DefaultClient
 	}
+
 	return &Client{
 		baseURL:    baseURL,
 		httpClient: httpClient,
 	}
 }
 
-// doRequest is a private helper method to execute HTTP requests
 func (c *Client) doRequest(ctx context.Context, method, url string, body io.Reader, headers map[string]string) (*http.Response, error) {
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	// Add headers if provided
-	if headers != nil {
-		for key, value := range headers {
-			req.Header.Set(key, value)
-		}
+	for key, value := range headers {
+		req.Header.Set(key, value)
 	}
 
 	resp, err := c.httpClient.Do(req)
@@ -52,7 +49,6 @@ func (c *Client) doRequest(ctx context.Context, method, url string, body io.Read
 	return resp, nil
 }
 
-// closeResponseBody safely closes the response body
 func closeResponseBody(resp *http.Response) {
 	if resp != nil && resp.Body != nil {
 		err := resp.Body.Close()
