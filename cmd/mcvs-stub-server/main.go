@@ -3,8 +3,8 @@ package main
 import (
 	"net/http"
 
+	"github.com/schubergphilis/mcvs-integrationtest-services/internal/app/stubserver"
 	"github.com/schubergphilis/mcvs-integrationtest-services/internal/pkg/constants"
-	"github.com/schubergphilis/mcvs-integrationtest-services/internal/stubserver"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -18,9 +18,11 @@ func main() {
 	}
 
 	log.Info("Starting server on :8080")
+
 	err := httpServer.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	log.Println("server closed")
 }

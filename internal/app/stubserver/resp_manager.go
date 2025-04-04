@@ -2,6 +2,7 @@ package stubserver
 
 import (
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -45,6 +46,7 @@ func GetID(ei *EndpointID) string {
 	for key := range ei.HeadersToMatch {
 		headerKeys = append(headerKeys, key)
 	}
+
 	sort.Strings(headerKeys)
 
 	for _, key := range headerKeys {
@@ -55,6 +57,7 @@ func GetID(ei *EndpointID) string {
 	for key := range ei.QueryParamsToMatch {
 		queryKeys = append(queryKeys, key)
 	}
+
 	sort.Strings(queryKeys)
 
 	for _, key := range queryKeys {
@@ -69,6 +72,7 @@ func ValidateEndpoint(ep EndpointConfiguration) error {
 	if ep.EndpointID.Path == "" || ep.EndpointID.HTTPMethod == "" {
 		return fmt.Errorf("path and method are required")
 	}
+
 	if ep.ResponseBody == "" {
 		return fmt.Errorf("response body is required")
 	}
@@ -83,14 +87,9 @@ func ValidateEndpoint(ep EndpointConfiguration) error {
 
 func validateHTTPMethods(ep EndpointConfiguration) error {
 	validMethods := []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"}
-	isValidMethod := false
-	for _, method := range validMethods {
-		if ep.EndpointID.HTTPMethod == method {
-			isValidMethod = true
 
-			break
-		}
-	}
+	isValidMethod := slices.Contains(validMethods, ep.EndpointID.HTTPMethod)
+
 	if !isValidMethod {
 		return fmt.Errorf("invalid HTTP method: %s", ep.EndpointID.HTTPMethod)
 	}
@@ -112,6 +111,7 @@ func (rm *ResponseManager) AddEndpoint(ec EndpointConfiguration) error {
 	if _, exists := rm.endpoints[endpointID]; exists {
 		return fmt.Errorf("endpoint already exists: %s", endpointID)
 	}
+
 	rm.endpoints[endpointID] = ec
 
 	return nil
@@ -120,15 +120,20 @@ func (rm *ResponseManager) AddEndpoint(ec EndpointConfiguration) error {
 func (rm *ResponseManager) MatchEndpoint(ei *EndpointID) (*EndpointConfiguration, error) {
 	rm.mu.RLock()
 	defer rm.mu.RUnlock()
+
 	endpointsScoring := make(map[int]*EndpointConfiguration)
 	maxScore := -1
+
 	for _, endpoint := range rm.endpoints {
 		if endpoint.EndpointID.Path == ei.Path && endpoint.EndpointID.HTTPMethod == ei.HTTPMethod {
 			currentScore := calculateMatch(&endpoint, ei)
+
 			if _, exists := endpointsScoring[currentScore]; exists {
 				return nil, fmt.Errorf("can't match for request: %s, to many matches", GetID(&endpoint.EndpointID))
 			}
+
 			endpointsScoring[currentScore] = &endpoint
+
 			if currentScore > maxScore {
 				maxScore = currentScore
 			}
@@ -144,6 +149,7 @@ func (rm *ResponseManager) MatchEndpoint(ei *EndpointID) (*EndpointConfiguration
 
 func calculateMatch(ec *EndpointConfiguration, ei *EndpointID) int {
 	counter := 0
+
 	for eiQueryParamToMatchName, eiQueryParamToMatchValue := range ei.QueryParamsToMatch {
 		for queryParamToMatchName, queryParamToMatchValue := range ec.EndpointID.QueryParamsToMatch {
 			if queryParamToMatchName == eiQueryParamToMatchName && queryParamToMatchValue == eiQueryParamToMatchValue {
@@ -169,6 +175,7 @@ func (rm *ResponseManager) GetEndpointByEndpointID(ei *EndpointID) (EndpointConf
 	defer rm.mu.RUnlock()
 
 	endpointID := GetID(ei)
+
 	config, exists := rm.endpoints[endpointID]
 	if !exists {
 		return EndpointConfiguration{}, fmt.Errorf("endpoint not found: %s", ei)
@@ -182,6 +189,7 @@ func (rm *ResponseManager) GetAllEndpointConfigurations() []EndpointConfiguratio
 	rm.mu.RLock()
 	defer rm.mu.RUnlock()
 	configs := make([]EndpointConfiguration, 0, len(rm.endpoints))
+
 	for _, config := range rm.endpoints {
 		configs = append(configs, config)
 	}
@@ -198,6 +206,7 @@ func (rm *ResponseManager) DeleteEndpointByEndpointID(ei *EndpointID) error {
 	if _, exists := rm.endpoints[endpointID]; !exists {
 		return fmt.Errorf("endpoint not found: %s", endpointID)
 	}
+
 	delete(rm.endpoints, endpointID)
 
 	return nil
@@ -207,6 +216,7 @@ func (rm *ResponseManager) DeleteEndpointByEndpointID(ei *EndpointID) error {
 func (rm *ResponseManager) DeleteEndpointByPath(path string) error {
 	rm.mu.Lock()
 	defer rm.mu.Unlock()
+
 	for endpointID, endpoint := range rm.endpoints {
 		if endpoint.EndpointID.Path == path {
 			delete(rm.endpoints, endpointID)
@@ -219,7 +229,9 @@ func (rm *ResponseManager) DeleteEndpointByPath(path string) error {
 // DeleteEndpointByPathAndMethod deletes all endpoint configurations with the specified path and method.
 func (rm *ResponseManager) DeleteEndpointByPathAndMethod(path, method string) error {
 	rm.mu.Lock()
+
 	defer rm.mu.Unlock()
+
 	for endpointID, endpoint := range rm.endpoints {
 		if endpoint.EndpointID.Path == path && endpoint.EndpointID.HTTPMethod == method {
 			delete(rm.endpoints, endpointID)
@@ -233,6 +245,7 @@ func (rm *ResponseManager) DeleteEndpointByPathAndMethod(path, method string) er
 func (rm *ResponseManager) DeleteAllEndpoints() {
 	rm.mu.Lock()
 	defer rm.mu.Unlock()
+
 	for endpointID := range rm.endpoints {
 		delete(rm.endpoints, endpointID)
 	}

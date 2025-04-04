@@ -1,4 +1,4 @@
-package stubserver_test
+package client
 
 import (
 	"encoding/json"
@@ -9,8 +9,7 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/schubergphilis/mcvs-integrationtest-services/internal/stubserver"
-	stub_server_client "github.com/schubergphilis/mcvs-integrationtest-services/pkg/stubserver"
+	"github.com/schubergphilis/mcvs-integrationtest-services/internal/app/stubserver"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
@@ -19,14 +18,15 @@ type StubServerTestSuite struct {
 	suite.Suite
 	server     *stubserver.Server
 	testServer *httptest.Server
-	client     *stub_server_client.Client
+	client     *Client
 }
 
 func (s *StubServerTestSuite) SetupTest() {
 	gin.SetMode(gin.DebugMode)
+
 	s.server = stubserver.NewServer()
 	s.testServer = httptest.NewServer(s.server.Router)
-	s.client = stub_server_client.NewClient(s.testServer.URL, nil)
+	s.client = NewClient(s.testServer.URL, nil)
 }
 
 func (s *StubServerTestSuite) TearDownTest() {
@@ -43,7 +43,7 @@ func (s *StubServerTestSuite) TestHealthCheck() {
 }
 
 func (s *StubServerTestSuite) TestAddResponse() {
-	testRequest := stub_server_client.EndpointRequest{
+	testRequest := stubserver.EndpointRequest{
 		Path:               "/test",
 		HTTPMethod:         http.MethodGet,
 		ResponseBody:       "test response",
@@ -65,12 +65,12 @@ func (s *StubServerTestSuite) TestAddResponse() {
 func (s *StubServerTestSuite) TestAddResponseWithInvalidData() {
 	testCases := []struct {
 		name          string
-		request       stub_server_client.EndpointRequest
+		request       stubserver.EndpointRequest
 		errorContains string
 	}{
 		{
 			name: "missing path",
-			request: stub_server_client.EndpointRequest{
+			request: stubserver.EndpointRequest{
 				HTTPMethod:         http.MethodGet,
 				ResponseBody:       "test response",
 				ResponseStatusCode: http.StatusOK,
@@ -79,7 +79,7 @@ func (s *StubServerTestSuite) TestAddResponseWithInvalidData() {
 		},
 		{
 			name: "missing HTTP method",
-			request: stub_server_client.EndpointRequest{
+			request: stubserver.EndpointRequest{
 				Path:               "/test",
 				ResponseBody:       "test response",
 				ResponseStatusCode: http.StatusOK,
@@ -88,7 +88,7 @@ func (s *StubServerTestSuite) TestAddResponseWithInvalidData() {
 		},
 		{
 			name: "missing response body",
-			request: stub_server_client.EndpointRequest{
+			request: stubserver.EndpointRequest{
 				Path:               "/test",
 				HTTPMethod:         http.MethodGet,
 				ResponseStatusCode: http.StatusOK,
@@ -107,7 +107,7 @@ func (s *StubServerTestSuite) TestAddResponseWithInvalidData() {
 }
 
 func (s *StubServerTestSuite) TestAddDuplicateEndpoint() {
-	testRequest := stub_server_client.EndpointRequest{
+	testRequest := stubserver.EndpointRequest{
 		Path:               "/test",
 		HTTPMethod:         http.MethodGet,
 		ResponseBody:       "test response",
@@ -123,7 +123,7 @@ func (s *StubServerTestSuite) TestAddDuplicateEndpoint() {
 }
 
 func (s *StubServerTestSuite) TestGetAllResponses() {
-	responses := []stub_server_client.EndpointRequest{
+	responses := []stubserver.EndpointRequest{
 		{
 			Path:               "/test1",
 			HTTPMethod:         http.MethodGet,
@@ -153,7 +153,7 @@ func (s *StubServerTestSuite) TestGetAllResponses() {
 }
 
 func (s *StubServerTestSuite) TestDeleteAllResponses() {
-	testRequest := stub_server_client.EndpointRequest{
+	testRequest := stubserver.EndpointRequest{
 		Path:               "/test",
 		HTTPMethod:         http.MethodGet,
 		ResponseBody:       "test response",
@@ -176,7 +176,7 @@ func (s *StubServerTestSuite) TestDeleteAllResponses() {
 }
 
 func (s *StubServerTestSuite) TestSendRequestWithQueryParamsMatching() {
-	testRequest := stub_server_client.EndpointRequest{
+	testRequest := stubserver.EndpointRequest{
 		Path:               "/api/v1/products",
 		HTTPMethod:         http.MethodGet,
 		QueryParamsToMatch: map[string]string{"page": "3", "limit": "25"},
@@ -219,7 +219,7 @@ func (s *StubServerTestSuite) TestSendRequestWithQueryParamsMatching() {
 }
 
 func (s *StubServerTestSuite) TestSendRequestWithHeadersMatching() {
-	testRequest := stub_server_client.EndpointRequest{
+	testRequest := stubserver.EndpointRequest{
 		Path:               "/api/v1/users",
 		HTTPMethod:         http.MethodGet,
 		HeadersToMatch:     map[string]string{"X-Page": "2", "X-Per-Page": "50"},
@@ -261,7 +261,7 @@ func (s *StubServerTestSuite) TestSendRequestWithHeadersMatching() {
 }
 
 func (s *StubServerTestSuite) TestSendRequestWithBothHeadersAndQueryParams() {
-	testRequest := stub_server_client.EndpointRequest{
+	testRequest := stubserver.EndpointRequest{
 		Path:               "/api/v1/orders",
 		HTTPMethod:         http.MethodGet,
 		QueryParamsToMatch: map[string]string{"sort": "created_at", "order": "desc"},
@@ -304,7 +304,7 @@ func (s *StubServerTestSuite) TestSendRequestWithBothHeadersAndQueryParams() {
 }
 
 func (s *StubServerTestSuite) TestSendRequestWithBody() {
-	createUserRequest := stub_server_client.EndpointRequest{
+	createUserRequest := stubserver.EndpointRequest{
 		Path:               "/api/users",
 		HTTPMethod:         http.MethodPost,
 		ResponseHeaders:    map[string]string{"Content-Type": "application/json"},

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewResponseManager(t *testing.T) {
@@ -232,11 +233,9 @@ func TestGetEndpointByEndpointId(t *testing.T) {
 func TestGetAllEndpointConfigurations(t *testing.T) {
 	rm := NewResponseManager()
 
-	// Test with empty manager
 	results := rm.GetAllEndpointConfigurations()
 	assert.Empty(t, results)
 
-	// Add multiple endpoints
 	endpoints := []EndpointConfiguration{
 		{
 			EndpointID: EndpointID{
@@ -261,12 +260,11 @@ func TestGetAllEndpointConfigurations(t *testing.T) {
 		assert.NoError(t, err)
 	}
 
-	// Test getting all endpoints
 	results = rm.GetAllEndpointConfigurations()
 	assert.Len(t, results, 2)
 
-	// Verify that all added endpoints are in the results
 	found := make(map[string]bool)
+
 	for _, result := range results {
 		id := GetID(&result.EndpointID)
 		found[id] = true
@@ -281,7 +279,6 @@ func TestGetAllEndpointConfigurations(t *testing.T) {
 func TestDeleteEndpointByEndpointId(t *testing.T) {
 	rm := NewResponseManager()
 
-	// Add a test endpoint
 	testEndpoint := EndpointConfiguration{
 		EndpointID: EndpointID{
 			Path:       "/api/v1/test",
@@ -294,12 +291,10 @@ func TestDeleteEndpointByEndpointId(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, rm.endpoints, 1)
 
-	// Test deleting the endpoint
 	err = rm.DeleteEndpointByEndpointID(&testEndpoint.EndpointID)
 	assert.NoError(t, err)
 	assert.Empty(t, rm.endpoints)
 
-	// Test deleting a non-existent endpoint
 	err = rm.DeleteEndpointByEndpointID(&testEndpoint.EndpointID)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "endpoint not found")
@@ -308,7 +303,6 @@ func TestDeleteEndpointByEndpointId(t *testing.T) {
 func TestDeleteEndpointByPath(t *testing.T) {
 	rm := NewResponseManager()
 
-	// Add multiple endpoints with the same path but different methods
 	endpoints := []EndpointConfiguration{
 		{
 			EndpointID: EndpointID{
@@ -340,16 +334,14 @@ func TestDeleteEndpointByPath(t *testing.T) {
 		err := rm.AddEndpoint(endpoint)
 		assert.NoError(t, err)
 	}
+
 	assert.Len(t, rm.endpoints, 3)
 
-	// Test deleting endpoints by path
 	err := rm.DeleteEndpointByPath("/api/v1/test")
 	assert.NoError(t, err)
 
-	// Should have only one endpoint left
 	assert.Len(t, rm.endpoints, 1)
 
-	// Verify the remaining endpoint
 	configs := rm.GetAllEndpointConfigurations()
 	assert.Equal(t, "/api/v1/other", configs[0].EndpointID.Path)
 }
@@ -357,7 +349,6 @@ func TestDeleteEndpointByPath(t *testing.T) {
 func TestDeleteEndpointByPathAndMethod(t *testing.T) {
 	rm := NewResponseManager()
 
-	// Add multiple endpoints
 	endpoints := []EndpointConfiguration{
 		{
 			EndpointID: EndpointID{
@@ -389,16 +380,14 @@ func TestDeleteEndpointByPathAndMethod(t *testing.T) {
 		err := rm.AddEndpoint(endpoint)
 		assert.NoError(t, err)
 	}
+
 	assert.Len(t, rm.endpoints, 3)
 
-	// Test deleting endpoint by path and method
 	err := rm.DeleteEndpointByPathAndMethod("/api/v1/test", "GET")
 	assert.NoError(t, err)
 
-	// Should have two endpoints left
 	assert.Len(t, rm.endpoints, 2)
 
-	// Verify the remaining endpoints
 	configs := rm.GetAllEndpointConfigurations()
 	foundPaths := make(map[string]bool)
 	foundMethods := make(map[string]bool)
@@ -413,7 +402,6 @@ func TestDeleteEndpointByPathAndMethod(t *testing.T) {
 	assert.True(t, foundMethods["POST"])
 	assert.True(t, foundMethods["GET"])
 
-	// Verify no GET method for /api/v1/test path
 	for _, config := range configs {
 		if config.EndpointID.Path == "/api/v1/test" {
 			assert.NotEqual(t, "GET", config.EndpointID.HTTPMethod)
@@ -424,7 +412,6 @@ func TestDeleteEndpointByPathAndMethod(t *testing.T) {
 func TestDeleteAllEndpoints(t *testing.T) {
 	rm := NewResponseManager()
 
-	// Add multiple endpoints
 	endpoints := []EndpointConfiguration{
 		{
 			EndpointID: EndpointID{
@@ -448,9 +435,9 @@ func TestDeleteAllEndpoints(t *testing.T) {
 		err := rm.AddEndpoint(endpoint)
 		assert.NoError(t, err)
 	}
+
 	assert.Len(t, rm.endpoints, 2)
 
-	// Test deleting all endpoints
 	rm.DeleteAllEndpoints()
 	assert.Empty(t, rm.endpoints)
 }
@@ -459,7 +446,6 @@ func TestDeleteAllEndpoints(t *testing.T) {
 func TestMatchEndpoint(t *testing.T) {
 	rm := NewResponseManager()
 
-	// Add multiple endpoints with different configurations
 	endpoints := []EndpointConfiguration{
 		{
 			EndpointID: EndpointID{
@@ -600,15 +586,19 @@ func TestMatchEndpoint(t *testing.T) {
 			result, err := rm.MatchEndpoint(&tt.request)
 
 			if tt.expectError {
-				assert.Error(t, err)
+				require.Error(t, err)
+
 				if tt.errorContains != "" {
 					assert.Contains(t, err.Error(), tt.errorContains)
 				}
-			} else {
-				assert.NoError(t, err)
-				assert.NotNil(t, result)
-				assert.Equal(t, tt.expectedPath, result.EndpointID.Path)
+
+				return
 			}
+
+			require.NoError(t, err)
+
+			assert.NotNil(t, result)
+			assert.Equal(t, tt.expectedPath, result.EndpointID.Path)
 		})
 	}
 
@@ -639,11 +629,9 @@ func TestMatchEndpoint(t *testing.T) {
 		},
 	}
 
-	// Adding first endpoint should succeed
 	err := rm.AddEndpoint(ambiguousEndpoints[0])
 	assert.NoError(t, err)
 
-	// Adding second identical endpoint should fail with "endpoint already exists"
 	err = rm.AddEndpoint(ambiguousEndpoints[1])
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "endpoint already exists")

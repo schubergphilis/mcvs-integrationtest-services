@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	stubserverclient "github.com/schubergphilis/mcvs-integrationtest-services/pkg/stubserver"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -32,10 +31,10 @@ func NewServer() *Server {
 		responseManager: responseManager,
 	}
 
-	router.GET(stubserverclient.HealthEndpoint, server.health)
-	router.POST(stubserverclient.BaseURLPath+stubserverclient.ResponsesEndpoint, server.addResponse)
-	router.GET(stubserverclient.BaseURLPath+stubserverclient.ResponsesEndpoint, server.getAllResponses)
-	router.DELETE(stubserverclient.BaseURLPath+stubserverclient.ResponsesEndpoint, server.deleteAllResponses)
+	router.GET(HealthEndpoint, server.health)
+	router.POST(BaseURLPath+ResponsesEndpoint, server.addResponse)
+	router.GET(BaseURLPath+ResponsesEndpoint, server.getAllResponses)
+	router.DELETE(BaseURLPath+ResponsesEndpoint, server.deleteAllResponses)
 
 	router.NoRoute(server.catchAll)
 
@@ -47,21 +46,21 @@ func (s *Server) health(c *gin.Context) {
 }
 
 func (s *Server) addResponse(c *gin.Context) {
-	var request stubserverclient.EndpointRequest
+	var request EndpointRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, stubserverclient.ErrorResponse{Error: "Invalid request body"})
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid request body"})
 
 		return
 	}
 
 	if request.Path == "" || request.HTTPMethod == "" {
-		c.JSON(http.StatusBadRequest, stubserverclient.ErrorResponse{Error: "Path and HTTP method are required"})
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Path and HTTP method are required"})
 
 		return
 	}
 
 	if request.ResponseBody == "" {
-		c.JSON(http.StatusBadRequest, stubserverclient.ErrorResponse{Error: "Response body is required"})
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Response body is required"})
 
 		return
 	}
@@ -80,7 +79,7 @@ func (s *Server) addResponse(c *gin.Context) {
 
 	err := s.responseManager.AddEndpoint(endpointConfig)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, stubserverclient.ErrorResponse{Error: err.Error()})
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 
 		return
 	}
@@ -91,9 +90,9 @@ func (s *Server) addResponse(c *gin.Context) {
 func (s *Server) getAllResponses(c *gin.Context) {
 	configs := s.responseManager.GetAllEndpointConfigurations()
 
-	responses := make([]stubserverclient.EndpointResponse, 0, len(configs))
+	responses := make([]EndpointResponse, 0, len(configs))
 	for _, config := range configs {
-		responses = append(responses, stubserverclient.EndpointResponse{
+		responses = append(responses, EndpointResponse{
 			Path:               config.EndpointID.Path,
 			HTTPMethod:         config.EndpointID.HTTPMethod,
 			QueryParamsToMatch: config.EndpointID.QueryParamsToMatch,
@@ -104,7 +103,7 @@ func (s *Server) getAllResponses(c *gin.Context) {
 		})
 	}
 
-	c.JSON(http.StatusOK, stubserverclient.EndpointListResponse{Endpoints: responses})
+	c.JSON(http.StatusOK, EndpointListResponse{Endpoints: responses})
 }
 
 func (s *Server) deleteAllResponses(c *gin.Context) {
@@ -150,6 +149,7 @@ func (s *Server) catchAll(c *gin.Context) {
 
 func flattenQueryParams(c *gin.Context) map[string]string {
 	result := make(map[string]string)
+
 	for key, values := range c.Request.URL.Query() {
 		if len(values) > 0 {
 			result[key] = values[0]
@@ -161,6 +161,7 @@ func flattenQueryParams(c *gin.Context) map[string]string {
 
 func flattenHeaders(c *gin.Context) map[string]string {
 	result := make(map[string]string)
+
 	for key, values := range c.Request.Header {
 		if len(values) > 0 {
 			result[key] = values[0]
@@ -180,18 +181,21 @@ func logRequestContext(c *gin.Context) {
 	requestInfo.WriteString(fmt.Sprintf("Remote Address: %s\n", c.Request.RemoteAddr))
 
 	requestInfo.WriteString("Headers:\n")
+
 	for name, values := range c.Request.Header {
 		if strings.EqualFold(name, "Authorization") {
 			requestInfo.WriteString(fmt.Sprintf("  %s: *****\n", name))
 
 			continue
 		}
+
 		for _, value := range values {
 			requestInfo.WriteString(fmt.Sprintf("  %s: %s\n", name, value))
 		}
 	}
 
 	requestInfo.WriteString("Query Parameters:\n")
+
 	for name, values := range c.Request.URL.Query() {
 		for _, value := range values {
 			requestInfo.WriteString(fmt.Sprintf("  %s: %s\n", name, value))
@@ -203,6 +207,7 @@ func logRequestContext(c *gin.Context) {
 		if len(body) > maxBodySizeBytes {
 			body = body[:maxBodySizeBytes]
 		}
+
 		requestInfo.WriteString(fmt.Sprintf("Body Content:\n%s\n", string(body)))
 
 		c.Request.Body = io.NopCloser(bytes.NewBuffer(body))

@@ -11,7 +11,7 @@ import (
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/schubergphilis/mcvs-golang-project-root/pkg/projectroot"
-	"github.com/schubergphilis/mcvs-integrationtest-services/internal/pkg/dockertestutils"
+	"github.com/schubergphilis/mcvs-integrationtest-services/internal/pkg/dockertest/utils"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -48,17 +48,21 @@ func (r *Resource) WithLogger(writer io.Writer) *Resource {
 // Start starts the resource with given run options.
 func (r *Resource) Start(opts *dockertest.RunOptions, _ string, hcOpts ...func(*docker.HostConfig)) error {
 	opts.Networks = append(opts.Networks, r.network)
+
 	var err error
+
 	projectRoot, err := projectroot.FindProjectRoot()
 	if err != nil {
 		return fmt.Errorf("failed to determine the root of the project: %w", err)
 	}
+
 	buildArgs := []docker.BuildArg{
 		{
 			Name:  "APPLICATION",
 			Value: "oktamock",
 		},
 	}
+
 	r.resource, err = r.pool.BuildAndRunWithBuildOptions(&dockertest.BuildOptions{
 		Dockerfile: "./Dockerfile",
 		ContextDir: projectRoot,
@@ -72,8 +76,9 @@ func (r *Resource) Start(opts *dockertest.RunOptions, _ string, hcOpts ...func(*
 	if err != nil {
 		return err
 	}
+
 	if r.writer != nil {
-		dockertestutils.AttachLoggerToResource(r.pool, r.writer, r.ContainerID())
+		utils.AttachLoggerToResource(r.pool, r.writer, r.ContainerID())
 	}
 
 	return r.startupCheck(opts)
@@ -85,22 +90,26 @@ func (r *Resource) startupCheck(opts *dockertest.RunOptions) error {
 		if len(opts.ExposedPorts) > 0 {
 			oktaMockServerPort = opts.ExposedPorts[0]
 		}
+
 		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, fmt.Sprintf("http://localhost:%s/token", r.resource.GetPort(fmt.Sprintf("%s/tcp", oktaMockServerPort))), io.NopCloser(bytes.NewBufferString("{\"custom_claims\": {\"allowed_services\": \"['*']\"}}")))
 		if err != nil {
 			return err
 		}
+
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
 			log.WithError(err).Error("unable to perform http request okta mock server, try again...")
 
 			return err
 		}
+
 		defer func() {
 			err = resp.Body.Close()
 			if err != nil {
 				log.WithError(err).Error("unable to close response body")
 			}
 		}()
+
 		if resp.StatusCode != http.StatusOK {
 			return ErrOktaMockServerNotHealthy
 		}
@@ -115,6 +124,7 @@ func (r *Resource) waitUntilContainerIsRunning() error {
 		if err != nil {
 			return err
 		}
+
 		if container.State.Running {
 			return nil
 		}

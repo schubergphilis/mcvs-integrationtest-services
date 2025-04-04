@@ -15,7 +15,6 @@ linters:
     - testpackage
     - varnamelen
     - wrapcheck
-    - wsl
   settings:
     depguard:
       rules:
