@@ -12,7 +12,7 @@ import (
 	"github.com/caarlos0/env/v9"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/lestrrat-go/jwx/v2/jwk"
-	"github.com/schubergphilis/mcvs-integrationtest-services/internal/oktamock/models"
+	"github.com/schubergphilis/mcvs-integrationtest-services/internal/app/oktamock/models"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -82,6 +82,7 @@ type JWTConfig struct {
 // NewConfig returns the config.
 func NewConfig() (*Config, error) {
 	cfg := Config{}
+
 	err := env.Parse(&cfg)
 	if err != nil {
 		return nil, err
@@ -95,6 +96,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	oktaMockServer, err := NewOktaMockServer(cfg)
 	if err != nil {
 		log.Fatal(err)
@@ -129,6 +131,7 @@ type CustomClaimsRequest struct {
 
 func (o *OktaMockServer) handleGetValidJWT(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
+
 	var claimsReq CustomClaimsRequest
 	if err := decoder.Decode(&claimsReq); err != nil {
 		http.Error(w, "Okta mock expects custom claims to be present in token request", http.StatusBadRequest)
@@ -163,12 +166,13 @@ func (o *OktaMockServer) handleGetValidJWT(w http.ResponseWriter, r *http.Reques
 
 		return
 	}
+
 	log.WithFields(log.Fields{"jwt": res}).Info("generated")
 
-	// Prepare and send the response.
 	tokenResponse := models.ValidJWTResponse{
 		AccessToken: res,
 	}
+
 	b, err := json.Marshal(tokenResponse)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -176,6 +180,7 @@ func (o *OktaMockServer) handleGetValidJWT(w http.ResponseWriter, r *http.Reques
 
 		return
 	}
+
 	_, err = w.Write(b)
 	if err != nil {
 		log.WithError(err).Error("unable to write token response")
@@ -186,6 +191,7 @@ func (o *OktaMockServer) handleGetJWKS(w http.ResponseWriter, _ *http.Request) {
 	resp := models.JWKSResponse{
 		Keys: []jwk.Key{o.jwkKey},
 	}
+
 	b, err := json.Marshal(resp)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -193,6 +199,7 @@ func (o *OktaMockServer) handleGetJWKS(w http.ResponseWriter, _ *http.Request) {
 
 		return
 	}
+
 	_, err = w.Write(b)
 	if err != nil {
 		log.WithError(err).Error("unable to write JWKS")
@@ -203,6 +210,7 @@ func (o *OktaMockServer) handleOpenIDConfig(w http.ResponseWriter, _ *http.Reque
 	resp := models.OpenIDConfigurationResponse{
 		JwksURI: fmt.Sprintf("%s/v1/keys", o.issuer),
 	}
+
 	b, err := json.Marshal(resp)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -210,6 +218,7 @@ func (o *OktaMockServer) handleOpenIDConfig(w http.ResponseWriter, _ *http.Reque
 
 		return
 	}
+
 	_, err = w.Write(b)
 	if err != nil {
 		log.WithError(err).Error("unable to write openID config")
@@ -256,6 +265,7 @@ func genRSAKeyAndJWK(cfg *JWTConfig) (*rsa.PrivateKey, jwk.Key, error) {
 	if err != nil {
 		return nil, nil, err
 	}
+
 	err = jwkKey.Set(jwk.AlgorithmKey, cfg.SigningMethod.Alg())
 	if err != nil {
 		return nil, nil, err
