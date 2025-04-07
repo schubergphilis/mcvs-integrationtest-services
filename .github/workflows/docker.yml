@@ -26,6 +26,5 @@ jobs:
           # yamllint disable rule:line-length
           dockle-accept-key: curl,HOME,libcrypto3,libssl3,PATH
           # yamllint enable rule:line-length
-          grype-version: v0.91.0
           images: ghcr.io/${{ github.repository }}/${{ matrix.build-args }}
           token: ${{ secrets.GITHUB_TOKEN }}

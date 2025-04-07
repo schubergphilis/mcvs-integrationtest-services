@@ -32,6 +32,5 @@ jobs:
           code-coverage-expected: 83.3
           golang-unit-tests-exclusions: |-
             \(cmd\/mcvs-integrationtest-services\|cmd\/oktamock\)
-          grype-version: v0.91.0
           testing-type: ${{ matrix.testing-type }}
           token: ${{ secrets.GITHUB_TOKEN }}
