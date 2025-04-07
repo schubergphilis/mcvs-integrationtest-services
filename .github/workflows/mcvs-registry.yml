@@ -81,7 +81,7 @@ jobs:
 
           # clean up the registry container
           docker rm -f mcvs-registry-tmp
-      - uses: schubergphilis/mcvs-docker-action@v0.6.2
+      - uses: schubergphilis/mcvs-docker-action@v0.7.1
         with:
           build-args: ${{ matrix.build-args }}
           context: ${{ env.DOCKERFILE_CONTEXT }}
