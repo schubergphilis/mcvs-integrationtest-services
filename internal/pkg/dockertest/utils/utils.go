@@ -1,4 +1,4 @@
-package dockertestutils
+package utils
 
 import (
 	"context"
@@ -16,6 +16,7 @@ func GetOrCreateNetwork(pool *dockertest.Pool, name string) (*dockertest.Network
 	if err != nil {
 		return nil, err
 	}
+
 	if len(networks) == 0 {
 		return pool.CreateNetwork(name)
 	}
@@ -40,6 +41,7 @@ func AttachLoggerToResource(pool *dockertest.Pool, outputStream io.Writer, conta
 
 			OutputStream: outputStream,
 		}
+
 		err := pool.Client.Logs(opts)
 		if err != nil {
 			log.Errorf("unable to attach logger to resource: %s", err)
