@@ -1,4 +1,4 @@
-package stubserver
+package models
 
 // EndpointRequest represents the request body for adding a new endpoint.
 type EndpointRequest struct {

@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/schubergphilis/mcvs-integrationtest-services/pkg/stubserver/models"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -46,21 +47,21 @@ func (s *Server) health(c *gin.Context) {
 }
 
 func (s *Server) addResponse(c *gin.Context) {
-	var request EndpointRequest
+	var request models.EndpointRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid request body"})
+		c.JSON(http.StatusBadRequest, models.ErrorResponse{Error: "Invalid request body"})
 
 		return
 	}
 
 	if request.Path == "" || request.HTTPMethod == "" {
-		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Path and HTTP method are required"})
+		c.JSON(http.StatusBadRequest, models.ErrorResponse{Error: "Path and HTTP method are required"})
 
 		return
 	}
 
 	if request.ResponseBody == "" {
-		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Response body is required"})
+		c.JSON(http.StatusBadRequest, models.ErrorResponse{Error: "Response body is required"})
 
 		return
 	}
@@ -79,7 +80,7 @@ func (s *Server) addResponse(c *gin.Context) {
 
 	err := s.responseManager.AddEndpoint(endpointConfig)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+		c.JSON(http.StatusBadRequest, models.ErrorResponse{Error: err.Error()})
 
 		return
 	}
@@ -90,9 +91,9 @@ func (s *Server) addResponse(c *gin.Context) {
 func (s *Server) getAllResponses(c *gin.Context) {
 	configs := s.responseManager.GetAllEndpointConfigurations()
 
-	responses := make([]EndpointResponse, 0, len(configs))
+	responses := make([]models.EndpointResponse, 0, len(configs))
 	for _, config := range configs {
-		responses = append(responses, EndpointResponse{
+		responses = append(responses, models.EndpointResponse{
 			Path:               config.EndpointID.Path,
 			HTTPMethod:         config.EndpointID.HTTPMethod,
 			QueryParamsToMatch: config.EndpointID.QueryParamsToMatch,
@@ -103,7 +104,7 @@ func (s *Server) getAllResponses(c *gin.Context) {
 		})
 	}
 
-	c.JSON(http.StatusOK, EndpointListResponse{Endpoints: responses})
+	c.JSON(http.StatusOK, models.EndpointListResponse{Endpoints: responses})
 }
 
 func (s *Server) deleteAllResponses(c *gin.Context) {
