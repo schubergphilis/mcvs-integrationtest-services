@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/schubergphilis/mcvs-integrationtest-services/internal/app/stubserver"
+	"github.com/schubergphilis/mcvs-integrationtest-services/pkg/stubserver/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
@@ -43,7 +44,7 @@ func (s *StubServerTestSuite) TestHealthCheck() {
 }
 
 func (s *StubServerTestSuite) TestAddResponse() {
-	testRequest := stubserver.EndpointRequest{
+	testRequest := models.EndpointRequest{
 		Path:               "/test",
 		HTTPMethod:         http.MethodGet,
 		ResponseBody:       "test response",
@@ -65,12 +66,12 @@ func (s *StubServerTestSuite) TestAddResponse() {
 func (s *StubServerTestSuite) TestAddResponseWithInvalidData() {
 	testCases := []struct {
 		name          string
-		request       stubserver.EndpointRequest
+		request       models.EndpointRequest
 		errorContains string
 	}{
 		{
 			name: "missing path",
-			request: stubserver.EndpointRequest{
+			request: models.EndpointRequest{
 				HTTPMethod:         http.MethodGet,
 				ResponseBody:       "test response",
 				ResponseStatusCode: http.StatusOK,
@@ -79,7 +80,7 @@ func (s *StubServerTestSuite) TestAddResponseWithInvalidData() {
 		},
 		{
 			name: "missing HTTP method",
-			request: stubserver.EndpointRequest{
+			request: models.EndpointRequest{
 				Path:               "/test",
 				ResponseBody:       "test response",
 				ResponseStatusCode: http.StatusOK,
@@ -88,7 +89,7 @@ func (s *StubServerTestSuite) TestAddResponseWithInvalidData() {
 		},
 		{
 			name: "missing response body",
-			request: stubserver.EndpointRequest{
+			request: models.EndpointRequest{
 				Path:               "/test",
 				HTTPMethod:         http.MethodGet,
 				ResponseStatusCode: http.StatusOK,
@@ -107,7 +108,7 @@ func (s *StubServerTestSuite) TestAddResponseWithInvalidData() {
 }
 
 func (s *StubServerTestSuite) TestAddDuplicateEndpoint() {
-	testRequest := stubserver.EndpointRequest{
+	testRequest := models.EndpointRequest{
 		Path:               "/test",
 		HTTPMethod:         http.MethodGet,
 		ResponseBody:       "test response",
@@ -123,7 +124,7 @@ func (s *StubServerTestSuite) TestAddDuplicateEndpoint() {
 }
 
 func (s *StubServerTestSuite) TestGetAllResponses() {
-	responses := []stubserver.EndpointRequest{
+	responses := []models.EndpointRequest{
 		{
 			Path:               "/test1",
 			HTTPMethod:         http.MethodGet,
@@ -153,7 +154,7 @@ func (s *StubServerTestSuite) TestGetAllResponses() {
 }
 
 func (s *StubServerTestSuite) TestDeleteAllResponses() {
-	testRequest := stubserver.EndpointRequest{
+	testRequest := models.EndpointRequest{
 		Path:               "/test",
 		HTTPMethod:         http.MethodGet,
 		ResponseBody:       "test response",
@@ -176,7 +177,7 @@ func (s *StubServerTestSuite) TestDeleteAllResponses() {
 }
 
 func (s *StubServerTestSuite) TestSendRequestWithQueryParamsMatching() {
-	testRequest := stubserver.EndpointRequest{
+	testRequest := models.EndpointRequest{
 		Path:               "/api/v1/products",
 		HTTPMethod:         http.MethodGet,
 		QueryParamsToMatch: map[string]string{"page": "3", "limit": "25"},
@@ -219,7 +220,7 @@ func (s *StubServerTestSuite) TestSendRequestWithQueryParamsMatching() {
 }
 
 func (s *StubServerTestSuite) TestSendRequestWithHeadersMatching() {
-	testRequest := stubserver.EndpointRequest{
+	testRequest := models.EndpointRequest{
 		Path:               "/api/v1/users",
 		HTTPMethod:         http.MethodGet,
 		HeadersToMatch:     map[string]string{"X-Page": "2", "X-Per-Page": "50"},
@@ -261,7 +262,7 @@ func (s *StubServerTestSuite) TestSendRequestWithHeadersMatching() {
 }
 
 func (s *StubServerTestSuite) TestSendRequestWithBothHeadersAndQueryParams() {
-	testRequest := stubserver.EndpointRequest{
+	testRequest := models.EndpointRequest{
 		Path:               "/api/v1/orders",
 		HTTPMethod:         http.MethodGet,
 		QueryParamsToMatch: map[string]string{"sort": "created_at", "order": "desc"},
@@ -304,7 +305,7 @@ func (s *StubServerTestSuite) TestSendRequestWithBothHeadersAndQueryParams() {
 }
 
 func (s *StubServerTestSuite) TestSendRequestWithBody() {
-	createUserRequest := stubserver.EndpointRequest{
+	createUserRequest := models.EndpointRequest{
 		Path:               "/api/users",
 		HTTPMethod:         http.MethodPost,
 		ResponseHeaders:    map[string]string{"Content-Type": "application/json"},

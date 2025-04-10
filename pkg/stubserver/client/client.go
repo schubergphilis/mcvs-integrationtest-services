@@ -11,6 +11,7 @@ import (
 	"net/url"
 
 	"github.com/schubergphilis/mcvs-integrationtest-services/internal/app/stubserver"
+	"github.com/schubergphilis/mcvs-integrationtest-services/pkg/stubserver/models"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -77,7 +78,7 @@ func (c *Client) HealthCheck(ctx context.Context) error {
 }
 
 // AddResponse adds a new response to the stub server.
-func (c *Client) AddResponse(ctx context.Context, request stubserver.EndpointRequest) error {
+func (c *Client) AddResponse(ctx context.Context, request models.EndpointRequest) error {
 	data, err := json.Marshal(request)
 	if err != nil {
 		return fmt.Errorf("failed to marshal request: %w", err)
@@ -93,7 +94,7 @@ func (c *Client) AddResponse(ctx context.Context, request stubserver.EndpointReq
 	defer closeResponseBody(resp)
 
 	if resp.StatusCode != http.StatusOK {
-		var errorResp stubserver.ErrorResponse
+		var errorResp models.ErrorResponse
 		if err := json.NewDecoder(resp.Body).Decode(&errorResp); err != nil {
 			return fmt.Errorf("failed with status code %d", resp.StatusCode)
 		}
@@ -105,7 +106,7 @@ func (c *Client) AddResponse(ctx context.Context, request stubserver.EndpointReq
 }
 
 // GetAllResponses retrieves all responses from the stub server.
-func (c *Client) GetAllResponses(ctx context.Context) ([]stubserver.EndpointResponse, error) {
+func (c *Client) GetAllResponses(ctx context.Context) ([]models.EndpointResponse, error) {
 	url := fmt.Sprintf("%s%s%s", c.baseURL, stubserver.BaseURLPath, stubserver.ResponsesEndpoint)
 
 	resp, err := c.doRequest(ctx, http.MethodGet, url, nil, nil)
@@ -118,7 +119,7 @@ func (c *Client) GetAllResponses(ctx context.Context) ([]stubserver.EndpointResp
 		return nil, fmt.Errorf("failed with status code %d", resp.StatusCode)
 	}
 
-	var listResponse stubserver.EndpointListResponse
+	var listResponse models.EndpointListResponse
 	if err := json.NewDecoder(resp.Body).Decode(&listResponse); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
