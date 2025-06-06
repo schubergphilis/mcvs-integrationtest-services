@@ -84,6 +84,21 @@ func (r *Resource) Start(opts *dockertest.RunOptions, _ string, hcOpts ...func(*
 	return r.startupCheck(opts)
 }
 
+// GetPort retrieve the mapped docker port.
+func (r *Resource) GetPort(port string) string {
+	return r.resource.GetPort(port)
+}
+
+// Stop stop the resource.
+func (r *Resource) Stop() error {
+	return r.resource.Close()
+}
+
+// ContainerID retrieves the container ID.
+func (r *Resource) ContainerID() string {
+	return r.resource.Container.ID
+}
+
 func (r *Resource) startupCheck(opts *dockertest.RunOptions) error {
 	return r.pool.Retry(func() error {
 		oktaMockServerPort := "8080"
@@ -131,19 +146,4 @@ func (r *Resource) waitUntilContainerIsRunning() error {
 
 		return ErrNotRunning
 	})
-}
-
-// GetPort retrieve the mapped docker port.
-func (r *Resource) GetPort(port string) string {
-	return r.resource.GetPort(port)
-}
-
-// Stop stop the resource.
-func (r *Resource) Stop() error {
-	return r.resource.Close()
-}
-
-// ContainerID retrieves the container ID.
-func (r *Resource) ContainerID() string {
-	return r.resource.Container.ID
 }
