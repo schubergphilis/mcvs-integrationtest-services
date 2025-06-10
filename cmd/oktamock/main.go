@@ -129,6 +129,24 @@ type CustomClaimsRequest struct {
 	CustomClaims map[string]interface{} `json:"custom_claims"`
 }
 
+// NewOktaMockServer returns a new OktaMockServer.
+func NewOktaMockServer(cfg *Config) (*OktaMockServer, error) {
+	privKeyRSA, jwkKey, err := genRSAKeyAndJWK(&cfg.JWTConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return &OktaMockServer{
+		audience:   cfg.JWTConfig.Aud,
+		expiration: cfg.JWTConfig.Expiration,
+		groups:     cfg.JWTConfig.Groups,
+		issuer:     cfg.JWTConfig.Issuer,
+		jwkKey:     jwkKey,
+		privKey:    privKeyRSA,
+		sub:        cfg.JWTConfig.Sub,
+	}, nil
+}
+
 func (o *OktaMockServer) handleGetValidJWT(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
@@ -223,24 +241,6 @@ func (o *OktaMockServer) handleOpenIDConfig(w http.ResponseWriter, _ *http.Reque
 	if err != nil {
 		log.WithError(err).Error("unable to write openID config")
 	}
-}
-
-// NewOktaMockServer returns a new OktaMockServer.
-func NewOktaMockServer(cfg *Config) (*OktaMockServer, error) {
-	privKeyRSA, jwkKey, err := genRSAKeyAndJWK(&cfg.JWTConfig)
-	if err != nil {
-		return nil, err
-	}
-
-	return &OktaMockServer{
-		audience:   cfg.JWTConfig.Aud,
-		expiration: cfg.JWTConfig.Expiration,
-		groups:     cfg.JWTConfig.Groups,
-		issuer:     cfg.JWTConfig.Issuer,
-		jwkKey:     jwkKey,
-		privKey:    privKeyRSA,
-		sub:        cfg.JWTConfig.Sub,
-	}, nil
 }
 
 func genRSAKeyAndJWK(cfg *JWTConfig) (*rsa.PrivateKey, jwk.Key, error) {

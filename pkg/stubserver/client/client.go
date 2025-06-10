@@ -33,33 +33,6 @@ func NewClient(baseURL string, httpClient *http.Client) *Client {
 	}
 }
 
-func (c *Client) doRequest(ctx context.Context, method, url string, body io.Reader, headers map[string]string) (*http.Response, error) {
-	req, err := http.NewRequestWithContext(ctx, method, url, body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
-	}
-
-	for key, value := range headers {
-		req.Header.Set(key, value)
-	}
-
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to execute request: %w", err)
-	}
-
-	return resp, nil
-}
-
-func closeResponseBody(resp *http.Response) {
-	if resp != nil && resp.Body != nil {
-		err := resp.Body.Close()
-		if err != nil {
-			log.Println("failed to close response body")
-		}
-	}
-}
-
 // HealthCheck checks if the stub server is healthy.
 func (c *Client) HealthCheck(ctx context.Context) error {
 	url := fmt.Sprintf("%s%s", c.baseURL, stubserver.HealthEndpoint)
@@ -168,4 +141,31 @@ func (c *Client) SendRequest(ctx context.Context, method, path string, queryPara
 	}
 
 	return resp, nil
+}
+
+func (c *Client) doRequest(ctx context.Context, method, url string, body io.Reader, headers map[string]string) (*http.Response, error) {
+	req, err := http.NewRequestWithContext(ctx, method, url, body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	for key, value := range headers {
+		req.Header.Set(key, value)
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute request: %w", err)
+	}
+
+	return resp, nil
+}
+
+func closeResponseBody(resp *http.Response) {
+	if resp != nil && resp.Body != nil {
+		err := resp.Body.Close()
+		if err != nil {
+			log.Println("failed to close response body")
+		}
+	}
 }
