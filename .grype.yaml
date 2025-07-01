@@ -1,5 +1,6 @@
 ---
 ignore:
   # Waiting for newer release of:
-  # * anchore/grype:v0.91.0
-  - vulnerability: GHSA-mh63-6h87-95cp
+  # * registry:3.0.0
+  - vulnerability: CVE-2025-22871
+  - vulnerability: CVE-2025-22874
