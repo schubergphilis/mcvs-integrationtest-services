@@ -11,7 +11,7 @@ require (
 	github.com/ory/dockertest/v3 v3.12.0
 	github.com/schubergphilis/mcvs-golang-project-root v0.1.4
 	github.com/sirupsen/logrus v1.9.3
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.0
 )
 
 require (
