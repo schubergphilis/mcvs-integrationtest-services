@@ -1,0 +1,16 @@
+---
+name: mcvs-golang-action-taskfile-remote-url-ref-updater
+"on":
+  push:
+  # schedule:
+  #   - cron: 42 6 * * *
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  mcvs-golang-action-taskfile-remote-url-ref-updater:
+    runs-on: ubuntu-24.04
+    steps:
+      # yamllint disable rule:line-length
+      - uses: schubergphilis/mcvs-golang-action-taskfile-remote-url-ref-updater@update-mcvs-golang-action-remote-url-ref
+      # yamllint enable rule:line-length
