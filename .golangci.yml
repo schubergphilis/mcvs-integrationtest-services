@@ -15,6 +15,9 @@ linters:
     - testpackage
     - varnamelen
     - wrapcheck
+    # The linter 'wsl' is deprecated (since v2.2.0) due to: new major version.
+    # Replaced by wsl_v5.
+    - wsl
   settings:
     depguard:
       rules:

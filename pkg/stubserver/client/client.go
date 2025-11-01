@@ -68,7 +68,9 @@ func (c *Client) AddResponse(ctx context.Context, request models.EndpointRequest
 
 	if resp.StatusCode != http.StatusOK {
 		var errorResp models.ErrorResponse
-		if err := json.NewDecoder(resp.Body).Decode(&errorResp); err != nil {
+
+		err := json.NewDecoder(resp.Body).Decode(&errorResp)
+		if err != nil {
 			return fmt.Errorf("failed with status code %d", resp.StatusCode)
 		}
 
@@ -93,7 +95,9 @@ func (c *Client) GetAllResponses(ctx context.Context) ([]models.EndpointResponse
 	}
 
 	var listResponse models.EndpointListResponse
-	if err := json.NewDecoder(resp.Body).Decode(&listResponse); err != nil {
+
+	err = json.NewDecoder(resp.Body).Decode(&listResponse)
+	if err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 

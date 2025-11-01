@@ -17,6 +17,7 @@ import (
 
 type StubServerTestSuite struct {
 	suite.Suite
+
 	server     *stubserver.Server
 	testServer *httptest.Server
 	client     *Client
@@ -197,6 +198,7 @@ func (s *StubServerTestSuite) TestSendRequestWithQueryParamsMatching() {
 		nil,
 	)
 	assert.NoError(s.T(), err)
+
 	defer resp.Body.Close()
 
 	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
@@ -214,6 +216,7 @@ func (s *StubServerTestSuite) TestSendRequestWithQueryParamsMatching() {
 		nil,
 	)
 	assert.NoError(s.T(), err)
+
 	defer resp.Body.Close()
 
 	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
@@ -240,6 +243,7 @@ func (s *StubServerTestSuite) TestSendRequestWithHeadersMatching() {
 		nil,
 	)
 	assert.NoError(s.T(), err)
+
 	defer resp.Body.Close()
 
 	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
@@ -256,6 +260,7 @@ func (s *StubServerTestSuite) TestSendRequestWithHeadersMatching() {
 		nil,
 	)
 	assert.NoError(s.T(), err)
+
 	defer resp.Body.Close()
 
 	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
@@ -283,6 +288,7 @@ func (s *StubServerTestSuite) TestSendRequestWithBothHeadersAndQueryParams() {
 		nil,
 	)
 	assert.NoError(s.T(), err)
+
 	defer resp.Body.Close()
 
 	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
@@ -299,6 +305,7 @@ func (s *StubServerTestSuite) TestSendRequestWithBothHeadersAndQueryParams() {
 		nil,
 	)
 	assert.NoError(s.T(), err)
+
 	defer resp.Body.Close()
 
 	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
@@ -331,6 +338,7 @@ func (s *StubServerTestSuite) TestSendRequestWithBody() {
 		strings.NewReader(string(jsonBody)),
 	)
 	assert.NoError(s.T(), err)
+
 	defer resp.Body.Close()
 
 	assert.Equal(s.T(), http.StatusCreated, resp.StatusCode)
@@ -339,6 +347,7 @@ func (s *StubServerTestSuite) TestSendRequestWithBody() {
 	assert.NoError(s.T(), err)
 
 	var responseData map[string]string
+
 	err = json.Unmarshal(body, &responseData)
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), "456", responseData["id"])
