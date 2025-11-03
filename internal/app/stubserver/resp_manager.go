@@ -188,6 +188,7 @@ func (rm *ResponseManager) GetEndpointByEndpointID(ei *EndpointID) (EndpointConf
 func (rm *ResponseManager) GetAllEndpointConfigurations() []EndpointConfiguration {
 	rm.mu.RLock()
 	defer rm.mu.RUnlock()
+
 	configs := make([]EndpointConfiguration, 0, len(rm.endpoints))
 
 	for _, config := range rm.endpoints {

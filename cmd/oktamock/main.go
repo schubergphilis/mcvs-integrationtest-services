@@ -151,7 +151,9 @@ func (o *OktaMockServer) handleGetValidJWT(w http.ResponseWriter, r *http.Reques
 	decoder := json.NewDecoder(r.Body)
 
 	var claimsReq CustomClaimsRequest
-	if err := decoder.Decode(&claimsReq); err != nil {
+
+	err := decoder.Decode(&claimsReq)
+	if err != nil {
 		http.Error(w, "Okta mock expects custom claims to be present in token request", http.StatusBadRequest)
 
 		return

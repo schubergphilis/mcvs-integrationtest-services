@@ -11,7 +11,7 @@ import (
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/schubergphilis/mcvs-golang-project-root/pkg/projectroot"
-	"github.com/schubergphilis/mcvs-integrationtest-services/internal/pkg/dockertest/utils"
+	"github.com/schubergphilis/mcvs-integrationtest-services/internal/pkg/dockertesthelpers"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -78,7 +78,7 @@ func (r *Resource) Start(opts *dockertest.RunOptions, _ string, hcOpts ...func(*
 	}
 
 	if r.writer != nil {
-		utils.AttachLoggerToResource(r.pool, r.writer, r.ContainerID())
+		dockertesthelpers.AttachLoggerToResource(r.pool, r.writer, r.ContainerID())
 	}
 
 	return r.startupCheck(opts)

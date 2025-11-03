@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/ory/dockertest/v3"
-	"github.com/schubergphilis/mcvs-integrationtest-services/internal/pkg/dockertest/utils"
+	"github.com/schubergphilis/mcvs-integrationtest-services/internal/pkg/dockertesthelpers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -20,7 +20,7 @@ func TestCanRunOkta(t *testing.T) {
 	pool, err := dockertest.NewPool("")
 	assert.NoError(t, err)
 
-	network, err := utils.GetOrCreateNetwork(pool, "integration-test-okta")
+	network, err := dockertesthelpers.GetOrCreateNetwork(pool, "integration-test-okta")
 	require.NoError(t, err)
 
 	defer func() {
@@ -28,6 +28,7 @@ func TestCanRunOkta(t *testing.T) {
 	}()
 
 	oktaResource := NewResource(pool, network)
+
 	defer func() {
 		assert.NoError(t, oktaResource.Stop())
 	}()

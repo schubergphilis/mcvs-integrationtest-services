@@ -23,7 +23,9 @@ func main() {
 
 	e.POST("/authorization/users", func(c echo.Context) error {
 		u := new(User)
-		if err := c.Bind(u); err != nil {
+
+		err := c.Bind(u)
+		if err != nil {
 			return err
 		}
 

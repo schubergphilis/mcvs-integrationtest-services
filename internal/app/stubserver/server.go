@@ -48,7 +48,9 @@ func (s *Server) health(c *gin.Context) {
 
 func (s *Server) addResponse(c *gin.Context) {
 	var request models.EndpointRequest
-	if err := c.ShouldBindJSON(&request); err != nil {
+
+	err := c.ShouldBindJSON(&request)
+	if err != nil {
 		c.JSON(http.StatusBadRequest, models.ErrorResponse{Error: "Invalid request body"})
 
 		return
@@ -78,7 +80,7 @@ func (s *Server) addResponse(c *gin.Context) {
 		ResponseStatusCode: request.ResponseStatusCode,
 	}
 
-	err := s.responseManager.AddEndpoint(endpointConfig)
+	err = s.responseManager.AddEndpoint(endpointConfig)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, models.ErrorResponse{Error: err.Error()})
 
