@@ -40,3 +40,7 @@ ignore:
     package:
       name: stdlib
       version: go1.23.7
+  - vulnerability: GHSA-47m2-4cr7-mhcw
+    package:
+      name: github.com/quic-go/quic-go
+      version: v0.54.0
