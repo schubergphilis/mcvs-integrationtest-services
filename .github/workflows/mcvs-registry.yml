@@ -31,7 +31,7 @@ jobs:
           - mcvs-registry
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v6.0.0
       - name: Install regctl
         uses: regclient/actions/regctl-installer@main
         with:
@@ -81,7 +81,7 @@ jobs:
 
           # clean up the registry container
           docker rm -f mcvs-registry-tmp
-      - uses: schubergphilis/mcvs-docker-action@v0.7.3
+      - uses: schubergphilis/mcvs-docker-action@v0.8.3
         with:
           build-args: ${{ matrix.build-args }}
           context: ${{ env.DOCKERFILE_CONTEXT }}

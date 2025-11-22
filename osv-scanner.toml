@@ -1,0 +1,4 @@
+[[IgnoredVulns]]
+id = "GO-2025-4098"
+ignoreUntil = 2025-12-20
+reason = "Waiting for upstream fix: github.com/opencontainers/runc"
