@@ -6,7 +6,7 @@ require (
 	github.com/caarlos0/env/v9 v9.0.0
 	github.com/gin-gonic/gin v1.11.0
 	github.com/golang-jwt/jwt/v4 v4.5.2
-	github.com/labstack/echo/v4 v4.14.0
+	github.com/labstack/echo/v4 v4.15.0
 	github.com/lestrrat-go/jwx/v2 v2.1.6
 	github.com/ory/dockertest/v3 v3.12.0
 	github.com/schubergphilis/mcvs-golang-project-root v0.1.6
