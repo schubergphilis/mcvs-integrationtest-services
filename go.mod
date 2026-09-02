@@ -1,6 +1,6 @@
 module github.com/schubergphilis/mcvs-integrationtest-services
 
-go 1.26.6
+go 1.27.1
 
 require (
 	github.com/caarlos0/env/v9 v9.0.0
