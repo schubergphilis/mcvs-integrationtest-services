@@ -31,9 +31,10 @@ jobs:
           - mcvs-registry
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6.0.1
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - name: Install regctl
-        uses: regclient/actions/regctl-installer@main
+        # yamllint disable-line rule:line-length
+        uses: regclient/actions/regctl-installer@1b705e32d40851370799ea5814e83d0a5f6a70dc # v0.1.0
         with:
           release: ${{ env.REGCTL_VERSION }}
       - name: Create registry backup directory
@@ -81,7 +82,8 @@ jobs:
 
           # clean up the registry container
           docker rm -f mcvs-registry-tmp
-      - uses: schubergphilis/mcvs-docker-action@v0.8.3
+      # yamllint disable-line rule:line-length
+      - uses: schubergphilis/mcvs-docker-action@ed30e5db799a279ec1062bc3ff237462c7ae797e # v0.12.0
         with:
           build-args: ${{ matrix.build-args }}
           context: ${{ env.DOCKERFILE_CONTEXT }}

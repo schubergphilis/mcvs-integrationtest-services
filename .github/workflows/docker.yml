@@ -19,8 +19,9 @@ jobs:
           - oktamock
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v6.0.1
-      - uses: schubergphilis/mcvs-docker-action@v0.8.3
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      # yamllint disable-line rule:line-length
+      - uses: schubergphilis/mcvs-docker-action@ed30e5db799a279ec1062bc3ff237462c7ae797e # v0.12.0
         with:
           build-args: ${{ matrix.build-args }}
           # yamllint disable rule:line-length
