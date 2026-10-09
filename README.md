@@ -50,6 +50,13 @@ curl \
 A simple HTTP server which can configure endpoints with a given response. This
 can be used as a stub server to mimic behavior of other services.
 
+> [!WARNING]
+> The stub server is for integration tests only. The `/stubserver/responses`
+> admin API is unauthenticated and lets any caller serve arbitrary bodies,
+> status codes and headers (e.g. `Set-Cookie`, `Location`, `text/html`) on any
+> path. Never expose it beyond an isolated test network. Admin request bodies
+> are limited to 1 MiB and at most 1000 endpoints can be registered.
+
 ### Build
 
 ```zsh

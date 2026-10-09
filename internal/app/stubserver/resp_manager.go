@@ -8,6 +8,10 @@ import (
 	"sync"
 )
 
+const (
+	maxEndpoints = 1000
+)
+
 // ResponseManager manages the stub server responses.
 type ResponseManager struct {
 	mu        sync.RWMutex
@@ -110,6 +114,10 @@ func (rm *ResponseManager) AddEndpoint(ec EndpointConfiguration) error {
 	endpointID := GetID(&ec.EndpointID)
 	if _, exists := rm.endpoints[endpointID]; exists {
 		return fmt.Errorf("endpoint already exists: %s", endpointID)
+	}
+
+	if len(rm.endpoints) >= maxEndpoints {
+		return fmt.Errorf("maximum number of endpoints reached: %d", maxEndpoints)
 	}
 
 	rm.endpoints[endpointID] = ec

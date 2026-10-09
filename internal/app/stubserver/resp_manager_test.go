@@ -1,6 +1,7 @@
 package stubserver
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -195,6 +196,24 @@ func TestAddEndpoint(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "path and method are required")
 	assert.Len(t, rm.endpoints, 1)
+}
+
+func TestAddEndpointMaxEndpoints(t *testing.T) {
+	rm := NewResponseManager()
+
+	for i := range maxEndpoints + 1 {
+		err := rm.AddEndpoint(EndpointConfiguration{
+			EndpointID:   EndpointID{Path: fmt.Sprintf("/api/%d", i), HTTPMethod: "GET"},
+			ResponseBody: "ok",
+		})
+		if i < maxEndpoints {
+			assert.NoError(t, err)
+		} else {
+			assert.ErrorContains(t, err, "maximum number of endpoints reached")
+		}
+	}
+
+	assert.Len(t, rm.endpoints, maxEndpoints)
 }
 
 func TestGetEndpointByEndpointId(t *testing.T) {
