@@ -26,8 +26,10 @@ jobs:
     env:
       TASK_X_REMOTE_TASKFILES: 1
     steps:
-      - uses: actions/checkout@v6.0.1
-      - uses: schubergphilis/mcvs-golang-action@v3.7.21
+      # yamllint disable rule:line-length
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: schubergphilis/mcvs-golang-action@b46f3d5f1ebb64d5d308a86aff0afa4f63174746 # v3.7.21
+        # yamllint enable rule:line-length
         with:
           code-coverage-expected: 83.5
           golang-unit-tests-exclusions: |-

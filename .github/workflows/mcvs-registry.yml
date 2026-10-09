@@ -31,9 +31,11 @@ jobs:
           - mcvs-registry
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6.0.1
+        # yamllint disable rule:line-length
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - name: Install regctl
-        uses: regclient/actions/regctl-installer@main
+        uses: regclient/actions/regctl-installer@dd58ad94f76adb73d8ac1bf75ed25f01545d5b32 # main
+        # yamllint enable rule:line-length
         with:
           release: ${{ env.REGCTL_VERSION }}
       - name: Create registry backup directory
