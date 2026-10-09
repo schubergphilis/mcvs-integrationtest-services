@@ -13,7 +13,8 @@ import (
 )
 
 const (
-	maxBodySizeBytes = 1024 * 10
+	maxBodySizeBytes      = 1024 * 10
+	maxAdminBodySizeBytes = 1024 * 1024
 )
 
 // Server represents the Gin HTTP server with router and handler.
@@ -48,6 +49,8 @@ func (s *Server) health(c *gin.Context) {
 
 func (s *Server) addResponse(c *gin.Context) {
 	var request models.EndpointRequest
+
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxAdminBodySizeBytes)
 
 	err := c.ShouldBindJSON(&request)
 	if err != nil {
