@@ -95,6 +95,12 @@ curl --location 'localhost:8080/reset' \
 
 Generate a valid Okta JSON Web Token (JWT).
 
+> [!WARNING]
+> Test-only. `POST /token` is unauthenticated and signs whatever claims are
+> requested with a key published at `/v1/keys`. Never expose this mock outside
+> a test harness, and never configure a non-test service to trust its issuer
+> or JWKS.
+
 ### Build
 
 ```zsh

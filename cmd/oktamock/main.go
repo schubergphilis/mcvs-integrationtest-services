@@ -170,8 +170,14 @@ func (o *OktaMockServer) handleGetValidJWT(w http.ResponseWriter, r *http.Reques
 		"sub":    o.sub,
 	}
 
-	// Add custom claims
+	// Add custom claims; iss and aud are fixed by config so tokens can't be minted for other issuers/audiences
 	for key, value := range claimsReq.CustomClaims {
+		if key == "iss" || key == "aud" {
+			http.Error(w, fmt.Sprintf("custom claim %q cannot be overridden", key), http.StatusBadRequest)
+
+			return
+		}
+
 		claims[key] = value
 	}
 
@@ -187,7 +193,7 @@ func (o *OktaMockServer) handleGetValidJWT(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	log.WithFields(log.Fields{"jwt": res}).Info("generated")
+	log.Info("generated jwt")
 
 	tokenResponse := models.ValidJWTResponse{
 		AccessToken: res,
