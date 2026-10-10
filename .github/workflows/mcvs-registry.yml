@@ -81,7 +81,8 @@ jobs:
 
           # clean up the registry container
           docker rm -f mcvs-registry-tmp
-      - uses: schubergphilis/mcvs-docker-action@v0.8.3
+      # yamllint disable-line rule:line-length
+      - uses: schubergphilis/mcvs-docker-action@e0d519535bd0bc2380e69ad0e1ce0bfa063c3e7f # v0.13.2
         with:
           build-args: ${{ matrix.build-args }}
           context: ${{ env.DOCKERFILE_CONTEXT }}

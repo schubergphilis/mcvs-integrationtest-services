@@ -1,4 +1,4 @@
-FROM registry:3.0.0
+FROM registry:3.1.2
 ARG APPLICATION
 RUN apk update && \
     apk upgrade && \
