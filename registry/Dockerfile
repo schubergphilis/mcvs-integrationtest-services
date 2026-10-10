@@ -1,4 +1,4 @@
-FROM registry:3.1.2
+FROM registry:3.1.2@sha256:ddf754342cfc8acc51a56d5d0ab6af06826461864460636d8bd5c546dab2a7b8
 ARG APPLICATION
 RUN apk update && \
     apk upgrade && \
