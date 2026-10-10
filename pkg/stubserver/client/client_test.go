@@ -15,6 +15,26 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
+const (
+	testPath         = "/test"
+	testResponseBody = "test response"
+
+	productsPath = "/api/v1/products"
+	usersPath    = "/api/v1/users"
+	ordersPath   = "/api/v1/orders"
+
+	contentTypeHeader = "Content-Type"
+	jsonContentType   = "application/json"
+	pageHeader        = "X-Page"
+	perPageHeader     = "X-Per-Page"
+
+	pageParam      = "page"
+	limitParam     = "limit"
+	sortParam      = "sort"
+	orderParam     = "order"
+	createdAtValue = "created_at"
+)
+
 type StubServerTestSuite struct {
 	suite.Suite
 
@@ -46,11 +66,11 @@ func (s *StubServerTestSuite) TestHealthCheck() {
 
 func (s *StubServerTestSuite) TestAddResponse() {
 	testRequest := models.EndpointRequest{
-		Path:               "/test",
+		Path:               testPath,
 		HTTPMethod:         http.MethodGet,
-		ResponseBody:       "test response",
+		ResponseBody:       testResponseBody,
 		ResponseStatusCode: http.StatusOK,
-		ResponseHeaders:    map[string]string{"Content-Type": "text/plain"},
+		ResponseHeaders:    map[string]string{contentTypeHeader: "text/plain"},
 	}
 
 	err := s.client.AddResponse(s.T().Context(), testRequest)
@@ -74,7 +94,7 @@ func (s *StubServerTestSuite) TestAddResponseWithInvalidData() {
 			name: "missing path",
 			request: models.EndpointRequest{
 				HTTPMethod:         http.MethodGet,
-				ResponseBody:       "test response",
+				ResponseBody:       testResponseBody,
 				ResponseStatusCode: http.StatusOK,
 			},
 			errorContains: "Path and HTTP method are required",
@@ -82,8 +102,8 @@ func (s *StubServerTestSuite) TestAddResponseWithInvalidData() {
 		{
 			name: "missing HTTP method",
 			request: models.EndpointRequest{
-				Path:               "/test",
-				ResponseBody:       "test response",
+				Path:               testPath,
+				ResponseBody:       testResponseBody,
 				ResponseStatusCode: http.StatusOK,
 			},
 			errorContains: "Path and HTTP method are required",
@@ -91,7 +111,7 @@ func (s *StubServerTestSuite) TestAddResponseWithInvalidData() {
 		{
 			name: "missing response body",
 			request: models.EndpointRequest{
-				Path:               "/test",
+				Path:               testPath,
 				HTTPMethod:         http.MethodGet,
 				ResponseStatusCode: http.StatusOK,
 			},
@@ -110,9 +130,9 @@ func (s *StubServerTestSuite) TestAddResponseWithInvalidData() {
 
 func (s *StubServerTestSuite) TestAddDuplicateEndpoint() {
 	testRequest := models.EndpointRequest{
-		Path:               "/test",
+		Path:               testPath,
 		HTTPMethod:         http.MethodGet,
-		ResponseBody:       "test response",
+		ResponseBody:       testResponseBody,
 		ResponseStatusCode: http.StatusOK,
 	}
 
@@ -156,9 +176,9 @@ func (s *StubServerTestSuite) TestGetAllResponses() {
 
 func (s *StubServerTestSuite) TestDeleteAllResponses() {
 	testRequest := models.EndpointRequest{
-		Path:               "/test",
+		Path:               testPath,
 		HTTPMethod:         http.MethodGet,
-		ResponseBody:       "test response",
+		ResponseBody:       testResponseBody,
 		ResponseStatusCode: http.StatusOK,
 	}
 
@@ -179,10 +199,10 @@ func (s *StubServerTestSuite) TestDeleteAllResponses() {
 
 func (s *StubServerTestSuite) TestSendRequestWithQueryParamsMatching() {
 	testRequest := models.EndpointRequest{
-		Path:               "/api/v1/products",
+		Path:               productsPath,
 		HTTPMethod:         http.MethodGet,
-		QueryParamsToMatch: map[string]string{"page": "3", "limit": "25"},
-		ResponseHeaders:    map[string]string{"Content-Type": "application/json"},
+		QueryParamsToMatch: map[string]string{pageParam: "3", limitParam: "25"},
+		ResponseHeaders:    map[string]string{contentTypeHeader: jsonContentType},
 		ResponseBody:       `{"items":[],"page":3,"limit":25,"total":100}`,
 		ResponseStatusCode: http.StatusOK,
 	}
@@ -192,8 +212,8 @@ func (s *StubServerTestSuite) TestSendRequestWithQueryParamsMatching() {
 
 	resp, err := s.client.SendRequest(s.T().Context(),
 		http.MethodGet,
-		"/api/v1/products",
-		map[string]string{"page": "3", "limit": "25"},
+		productsPath,
+		map[string]string{pageParam: "3", limitParam: "25"},
 		nil,
 		nil,
 	)
@@ -202,7 +222,7 @@ func (s *StubServerTestSuite) TestSendRequestWithQueryParamsMatching() {
 	defer resp.Body.Close()
 
 	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
-	assert.Equal(s.T(), "application/json", resp.Header.Get("Content-Type"))
+	assert.Equal(s.T(), jsonContentType, resp.Header.Get(contentTypeHeader))
 
 	body, err := io.ReadAll(resp.Body)
 	assert.NoError(s.T(), err)
@@ -210,8 +230,8 @@ func (s *StubServerTestSuite) TestSendRequestWithQueryParamsMatching() {
 
 	resp, err = s.client.SendRequest(s.T().Context(),
 		http.MethodGet,
-		"/api/v1/products",
-		map[string]string{"page": "2", "limit": "25"},
+		productsPath,
+		map[string]string{pageParam: "2", limitParam: "25"},
 		nil,
 		nil,
 	)
@@ -224,10 +244,10 @@ func (s *StubServerTestSuite) TestSendRequestWithQueryParamsMatching() {
 
 func (s *StubServerTestSuite) TestSendRequestWithHeadersMatching() {
 	testRequest := models.EndpointRequest{
-		Path:               "/api/v1/users",
+		Path:               usersPath,
 		HTTPMethod:         http.MethodGet,
-		HeadersToMatch:     map[string]string{"X-Page": "2", "X-Per-Page": "50"},
-		ResponseHeaders:    map[string]string{"Content-Type": "application/json"},
+		HeadersToMatch:     map[string]string{pageHeader: "2", perPageHeader: "50"},
+		ResponseHeaders:    map[string]string{contentTypeHeader: jsonContentType},
 		ResponseBody:       `{"users":[],"page":2,"per_page":50,"total":150}`,
 		ResponseStatusCode: http.StatusOK,
 	}
@@ -237,9 +257,9 @@ func (s *StubServerTestSuite) TestSendRequestWithHeadersMatching() {
 
 	resp, err := s.client.SendRequest(s.T().Context(),
 		http.MethodGet,
-		"/api/v1/users",
+		usersPath,
 		nil,
-		map[string]string{"X-Page": "2", "X-Per-Page": "50"},
+		map[string]string{pageHeader: "2", perPageHeader: "50"},
 		nil,
 	)
 	assert.NoError(s.T(), err)
@@ -254,9 +274,9 @@ func (s *StubServerTestSuite) TestSendRequestWithHeadersMatching() {
 
 	resp, err = s.client.SendRequest(s.T().Context(),
 		http.MethodGet,
-		"/api/v1/users",
+		usersPath,
 		nil,
-		map[string]string{"X-Page": "3", "X-Per-Page": "50"},
+		map[string]string{pageHeader: "3", perPageHeader: "50"},
 		nil,
 	)
 	assert.NoError(s.T(), err)
@@ -268,11 +288,11 @@ func (s *StubServerTestSuite) TestSendRequestWithHeadersMatching() {
 
 func (s *StubServerTestSuite) TestSendRequestWithBothHeadersAndQueryParams() {
 	testRequest := models.EndpointRequest{
-		Path:               "/api/v1/orders",
+		Path:               ordersPath,
 		HTTPMethod:         http.MethodGet,
-		QueryParamsToMatch: map[string]string{"sort": "created_at", "order": "desc"},
-		HeadersToMatch:     map[string]string{"X-Page": "1", "X-Per-Page": "100"},
-		ResponseHeaders:    map[string]string{"Content-Type": "application/json"},
+		QueryParamsToMatch: map[string]string{sortParam: createdAtValue, orderParam: "desc"},
+		HeadersToMatch:     map[string]string{pageHeader: "1", perPageHeader: "100"},
+		ResponseHeaders:    map[string]string{contentTypeHeader: jsonContentType},
 		ResponseBody:       `{"orders":[],"page":1,"per_page":100,"sort":"created_at","order":"desc"}`,
 		ResponseStatusCode: http.StatusOK,
 	}
@@ -282,9 +302,9 @@ func (s *StubServerTestSuite) TestSendRequestWithBothHeadersAndQueryParams() {
 
 	resp, err := s.client.SendRequest(s.T().Context(),
 		http.MethodGet,
-		"/api/v1/orders",
-		map[string]string{"sort": "created_at", "order": "desc"},
-		map[string]string{"X-Page": "1", "X-Per-Page": "100"},
+		ordersPath,
+		map[string]string{sortParam: createdAtValue, orderParam: "desc"},
+		map[string]string{pageHeader: "1", perPageHeader: "100"},
 		nil,
 	)
 	assert.NoError(s.T(), err)
@@ -299,9 +319,9 @@ func (s *StubServerTestSuite) TestSendRequestWithBothHeadersAndQueryParams() {
 
 	resp, err = s.client.SendRequest(s.T().Context(),
 		http.MethodGet,
-		"/api/v1/orders",
-		map[string]string{"sort": "created_at", "order": "asc"},
-		map[string]string{"X-Page": "1", "X-Per-Page": "100"},
+		ordersPath,
+		map[string]string{sortParam: createdAtValue, orderParam: "asc"},
+		map[string]string{pageHeader: "1", perPageHeader: "100"},
 		nil,
 	)
 	assert.NoError(s.T(), err)
@@ -315,7 +335,7 @@ func (s *StubServerTestSuite) TestSendRequestWithBody() {
 	createUserRequest := models.EndpointRequest{
 		Path:               "/api/users",
 		HTTPMethod:         http.MethodPost,
-		ResponseHeaders:    map[string]string{"Content-Type": "application/json"},
+		ResponseHeaders:    map[string]string{contentTypeHeader: jsonContentType},
 		ResponseBody:       `{"id": "456", "name": "New User", "status": "created"}`,
 		ResponseStatusCode: http.StatusCreated,
 	}
@@ -334,7 +354,7 @@ func (s *StubServerTestSuite) TestSendRequestWithBody() {
 		http.MethodPost,
 		"/api/users",
 		nil,
-		map[string]string{"Content-Type": "application/json"},
+		map[string]string{contentTypeHeader: jsonContentType},
 		strings.NewReader(string(jsonBody)),
 	)
 	assert.NoError(s.T(), err)
