@@ -177,23 +177,23 @@ func flattenHeaders(c *gin.Context) map[string]string {
 func logRequestContext(c *gin.Context) {
 	var requestInfo strings.Builder
 
-	requestInfo.WriteString(fmt.Sprintf("Request Method: %s\n", c.Request.Method))
-	requestInfo.WriteString(fmt.Sprintf("Absolute URL: %s\n", c.Request.URL.String()))
-	requestInfo.WriteString(fmt.Sprintf("Absolute Path: %s\n", c.Request.URL.Path))
-	requestInfo.WriteString(fmt.Sprintf("Host: %s\n", c.Request.Host))
-	requestInfo.WriteString(fmt.Sprintf("Remote Address: %s\n", c.Request.RemoteAddr))
+	fmt.Fprintf(&requestInfo, "Request Method: %s\n", c.Request.Method)
+	fmt.Fprintf(&requestInfo, "Absolute URL: %s\n", c.Request.URL.String())
+	fmt.Fprintf(&requestInfo, "Absolute Path: %s\n", c.Request.URL.Path)
+	fmt.Fprintf(&requestInfo, "Host: %s\n", c.Request.Host)
+	fmt.Fprintf(&requestInfo, "Remote Address: %s\n", c.Request.RemoteAddr)
 
 	requestInfo.WriteString("Headers:\n")
 
 	for name, values := range c.Request.Header {
 		if strings.EqualFold(name, "Authorization") {
-			requestInfo.WriteString(fmt.Sprintf("  %s: *****\n", name))
+			fmt.Fprintf(&requestInfo, "  %s: *****\n", name)
 
 			continue
 		}
 
 		for _, value := range values {
-			requestInfo.WriteString(fmt.Sprintf("  %s: %s\n", name, value))
+			fmt.Fprintf(&requestInfo, "  %s: %s\n", name, value)
 		}
 	}
 
@@ -201,7 +201,7 @@ func logRequestContext(c *gin.Context) {
 
 	for name, values := range c.Request.URL.Query() {
 		for _, value := range values {
-			requestInfo.WriteString(fmt.Sprintf("  %s: %s\n", name, value))
+			fmt.Fprintf(&requestInfo, "  %s: %s\n", name, value)
 		}
 	}
 
@@ -211,7 +211,7 @@ func logRequestContext(c *gin.Context) {
 			body = body[:maxBodySizeBytes]
 		}
 
-		requestInfo.WriteString(fmt.Sprintf("Body Content:\n%s\n", string(body)))
+		fmt.Fprintf(&requestInfo, "Body Content:\n%s\n", string(body))
 
 		c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
 	}
