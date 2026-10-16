@@ -1,11 +1,31 @@
 package stubserver
 
 import (
+	"net/http"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+)
+
+const (
+	testPath     = "/api/v1/test"
+	usersPath    = "/api/v1/users"
+	productsPath = "/api/v1/products"
+	otherPath    = "/api/v1/other"
+
+	statusOKBody = "{\"status\":\"ok\"}"
+
+	authKeyHeader   = "X-API-Key"
+	acceptHeader    = "Accept"
+	jsonContentType = "application/json"
+	apiKey1         = "key1"
+	apiKey2         = "key2"
+
+	pageParam  = "page"
+	limitParam = "limit"
+	sortParam  = "sort"
 )
 
 func TestNewResponseManager(t *testing.T) {
@@ -24,8 +44,8 @@ func TestGetID(t *testing.T) {
 		{
 			name: "empty headers and params",
 			endpoint: EndpointID{
-				Path:               "/api/v1/test",
-				HTTPMethod:         "GET",
+				Path:               testPath,
+				HTTPMethod:         http.MethodGet,
 				QueryParamsToMatch: map[string]string{},
 				HeadersToMatch:     map[string]string{},
 			},
@@ -34,8 +54,8 @@ func TestGetID(t *testing.T) {
 		{
 			name: "pagination in headers",
 			endpoint: EndpointID{
-				Path:               "/api/v1/users",
-				HTTPMethod:         "GET",
+				Path:               usersPath,
+				HTTPMethod:         http.MethodGet,
 				QueryParamsToMatch: map[string]string{},
 				HeadersToMatch:     map[string]string{"X-Page": "2", "X-Per-Page": "50"},
 			},
@@ -44,9 +64,9 @@ func TestGetID(t *testing.T) {
 		{
 			name: "pagination in query params",
 			endpoint: EndpointID{
-				Path:               "/api/v1/products",
-				HTTPMethod:         "GET",
-				QueryParamsToMatch: map[string]string{"page": "3", "limit": "25"},
+				Path:               productsPath,
+				HTTPMethod:         http.MethodGet,
+				QueryParamsToMatch: map[string]string{pageParam: "3", limitParam: "25"},
 				HeadersToMatch:     map[string]string{},
 			},
 			expected: strings.ToLower("/api/v1/products:GET:limit=25:page=3"),
@@ -55,8 +75,8 @@ func TestGetID(t *testing.T) {
 			name: "sorting in query params with pagination in headers",
 			endpoint: EndpointID{
 				Path:               "/api/v1/orders",
-				HTTPMethod:         "GET",
-				QueryParamsToMatch: map[string]string{"sort": "created_at", "order": "desc"},
+				HTTPMethod:         http.MethodGet,
+				QueryParamsToMatch: map[string]string{sortParam: "created_at", "order": "desc"},
 				HeadersToMatch:     map[string]string{"X-Page": "1", "X-Per-Page": "100"},
 			},
 			expected: strings.ToLower("/api/v1/orders:GET:X-Page=1:X-Per-Page=100:order=desc:sort=created_at"),
@@ -83,10 +103,10 @@ func TestValidateEndpoint(t *testing.T) {
 			name: "valid configuration",
 			config: EndpointConfiguration{
 				EndpointID: EndpointID{
-					Path:       "/api/v1/test",
-					HTTPMethod: "GET",
+					Path:       testPath,
+					HTTPMethod: http.MethodGet,
 				},
-				ResponseBody:       "{\"status\":\"ok\"}",
+				ResponseBody:       statusOKBody,
 				ResponseStatusCode: 200,
 			},
 			expectedError: false,
@@ -96,9 +116,9 @@ func TestValidateEndpoint(t *testing.T) {
 			config: EndpointConfiguration{
 				EndpointID: EndpointID{
 					Path:       "",
-					HTTPMethod: "GET",
+					HTTPMethod: http.MethodGet,
 				},
-				ResponseBody:       "{\"status\":\"ok\"}",
+				ResponseBody:       statusOKBody,
 				ResponseStatusCode: 200,
 			},
 			expectedError: true,
@@ -108,10 +128,10 @@ func TestValidateEndpoint(t *testing.T) {
 			name: "missing method",
 			config: EndpointConfiguration{
 				EndpointID: EndpointID{
-					Path:       "/api/v1/test",
+					Path:       testPath,
 					HTTPMethod: "",
 				},
-				ResponseBody:       "{\"status\":\"ok\"}",
+				ResponseBody:       statusOKBody,
 				ResponseStatusCode: 200,
 			},
 			expectedError: true,
@@ -121,8 +141,8 @@ func TestValidateEndpoint(t *testing.T) {
 			name: "missing response body",
 			config: EndpointConfiguration{
 				EndpointID: EndpointID{
-					Path:       "/api/v1/test",
-					HTTPMethod: "GET",
+					Path:       testPath,
+					HTTPMethod: http.MethodGet,
 				},
 				ResponseBody:       "",
 				ResponseStatusCode: 200,
@@ -134,10 +154,10 @@ func TestValidateEndpoint(t *testing.T) {
 			name: "invalid HTTP method",
 			config: EndpointConfiguration{
 				EndpointID: EndpointID{
-					Path:       "/api/v1/test",
+					Path:       testPath,
 					HTTPMethod: "INVALID",
 				},
-				ResponseBody:       "{\"status\":\"ok\"}",
+				ResponseBody:       statusOKBody,
 				ResponseStatusCode: 200,
 			},
 			expectedError: true,
@@ -164,12 +184,12 @@ func TestAddEndpoint(t *testing.T) {
 	// Test adding a valid endpoint
 	validEndpoint := EndpointConfiguration{
 		EndpointID: EndpointID{
-			Path:               "/api/v1/test",
-			HTTPMethod:         "GET",
+			Path:               testPath,
+			HTTPMethod:         http.MethodGet,
 			QueryParamsToMatch: map[string]string{},
 			HeadersToMatch:     map[string]string{},
 		},
-		ResponseBody:       "{\"status\":\"ok\"}",
+		ResponseBody:       statusOKBody,
 		ResponseStatusCode: 200,
 	}
 	err := rm.AddEndpoint(validEndpoint)
@@ -186,9 +206,9 @@ func TestAddEndpoint(t *testing.T) {
 	invalidEndpoint := EndpointConfiguration{
 		EndpointID: EndpointID{
 			Path:       "",
-			HTTPMethod: "GET",
+			HTTPMethod: http.MethodGet,
 		},
-		ResponseBody:       "{\"status\":\"ok\"}",
+		ResponseBody:       statusOKBody,
 		ResponseStatusCode: 200,
 	}
 	err = rm.AddEndpoint(invalidEndpoint)
@@ -203,14 +223,14 @@ func TestGetEndpointByEndpointId(t *testing.T) {
 	// Add a test endpoint
 	testEndpoint := EndpointConfiguration{
 		EndpointID: EndpointID{
-			Path:               "/api/v1/test",
-			HTTPMethod:         "GET",
+			Path:               testPath,
+			HTTPMethod:         http.MethodGet,
 			QueryParamsToMatch: map[string]string{"param": "value"},
 			HeadersToMatch:     map[string]string{"Header": "Value"},
 		},
-		ResponseBody:       "{\"status\":\"ok\"}",
+		ResponseBody:       statusOKBody,
 		ResponseStatusCode: 200,
-		ResponseHeaders:    map[string]string{"Content-Type": "application/json"},
+		ResponseHeaders:    map[string]string{"Content-Type": jsonContentType},
 	}
 	err := rm.AddEndpoint(testEndpoint)
 	assert.NoError(t, err)
@@ -223,7 +243,7 @@ func TestGetEndpointByEndpointId(t *testing.T) {
 	// Test retrieving a non-existent endpoint
 	nonExistentEndpoint := EndpointID{
 		Path:       "/non/existent",
-		HTTPMethod: "GET",
+		HTTPMethod: http.MethodGet,
 	}
 	_, err = rm.GetEndpointByEndpointID(&nonExistentEndpoint)
 	assert.Error(t, err)
@@ -240,7 +260,7 @@ func TestGetAllEndpointConfigurations(t *testing.T) {
 		{
 			EndpointID: EndpointID{
 				Path:       "/api/v1/test1",
-				HTTPMethod: "GET",
+				HTTPMethod: http.MethodGet,
 			},
 			ResponseBody:       "{\"id\":1}",
 			ResponseStatusCode: 200,
@@ -248,7 +268,7 @@ func TestGetAllEndpointConfigurations(t *testing.T) {
 		{
 			EndpointID: EndpointID{
 				Path:       "/api/v1/test2",
-				HTTPMethod: "POST",
+				HTTPMethod: http.MethodPost,
 			},
 			ResponseBody:       "{\"id\":2}",
 			ResponseStatusCode: 201,
@@ -281,10 +301,10 @@ func TestDeleteEndpointByEndpointId(t *testing.T) {
 
 	testEndpoint := EndpointConfiguration{
 		EndpointID: EndpointID{
-			Path:       "/api/v1/test",
-			HTTPMethod: "GET",
+			Path:       testPath,
+			HTTPMethod: http.MethodGet,
 		},
-		ResponseBody:       "{\"status\":\"ok\"}",
+		ResponseBody:       statusOKBody,
 		ResponseStatusCode: 200,
 	}
 	err := rm.AddEndpoint(testEndpoint)
@@ -306,24 +326,24 @@ func TestDeleteEndpointByPath(t *testing.T) {
 	endpoints := []EndpointConfiguration{
 		{
 			EndpointID: EndpointID{
-				Path:       "/api/v1/test",
-				HTTPMethod: "GET",
+				Path:       testPath,
+				HTTPMethod: http.MethodGet,
 			},
 			ResponseBody:       "{\"method\":\"GET\"}",
 			ResponseStatusCode: 200,
 		},
 		{
 			EndpointID: EndpointID{
-				Path:       "/api/v1/test",
-				HTTPMethod: "POST",
+				Path:       testPath,
+				HTTPMethod: http.MethodPost,
 			},
 			ResponseBody:       "{\"method\":\"POST\"}",
 			ResponseStatusCode: 201,
 		},
 		{
 			EndpointID: EndpointID{
-				Path:       "/api/v1/other",
-				HTTPMethod: "GET",
+				Path:       otherPath,
+				HTTPMethod: http.MethodGet,
 			},
 			ResponseBody:       "{\"path\":\"other\"}",
 			ResponseStatusCode: 200,
@@ -337,13 +357,13 @@ func TestDeleteEndpointByPath(t *testing.T) {
 
 	assert.Len(t, rm.endpoints, 3)
 
-	err := rm.DeleteEndpointByPath("/api/v1/test")
+	err := rm.DeleteEndpointByPath(testPath)
 	assert.NoError(t, err)
 
 	assert.Len(t, rm.endpoints, 1)
 
 	configs := rm.GetAllEndpointConfigurations()
-	assert.Equal(t, "/api/v1/other", configs[0].EndpointID.Path)
+	assert.Equal(t, otherPath, configs[0].EndpointID.Path)
 }
 
 func TestDeleteEndpointByPathAndMethod(t *testing.T) {
@@ -352,24 +372,24 @@ func TestDeleteEndpointByPathAndMethod(t *testing.T) {
 	endpoints := []EndpointConfiguration{
 		{
 			EndpointID: EndpointID{
-				Path:       "/api/v1/test",
-				HTTPMethod: "GET",
+				Path:       testPath,
+				HTTPMethod: http.MethodGet,
 			},
 			ResponseBody:       "{\"method\":\"GET\"}",
 			ResponseStatusCode: 200,
 		},
 		{
 			EndpointID: EndpointID{
-				Path:       "/api/v1/test",
-				HTTPMethod: "POST",
+				Path:       testPath,
+				HTTPMethod: http.MethodPost,
 			},
 			ResponseBody:       "{\"method\":\"POST\"}",
 			ResponseStatusCode: 201,
 		},
 		{
 			EndpointID: EndpointID{
-				Path:       "/api/v1/other",
-				HTTPMethod: "GET",
+				Path:       otherPath,
+				HTTPMethod: http.MethodGet,
 			},
 			ResponseBody:       "{\"path\":\"other\"}",
 			ResponseStatusCode: 200,
@@ -383,7 +403,7 @@ func TestDeleteEndpointByPathAndMethod(t *testing.T) {
 
 	assert.Len(t, rm.endpoints, 3)
 
-	err := rm.DeleteEndpointByPathAndMethod("/api/v1/test", "GET")
+	err := rm.DeleteEndpointByPathAndMethod(testPath, http.MethodGet)
 	assert.NoError(t, err)
 
 	assert.Len(t, rm.endpoints, 2)
@@ -397,14 +417,14 @@ func TestDeleteEndpointByPathAndMethod(t *testing.T) {
 		foundMethods[config.EndpointID.HTTPMethod] = true
 	}
 
-	assert.True(t, foundPaths["/api/v1/test"])
-	assert.True(t, foundPaths["/api/v1/other"])
-	assert.True(t, foundMethods["POST"])
-	assert.True(t, foundMethods["GET"])
+	assert.True(t, foundPaths[testPath])
+	assert.True(t, foundPaths[otherPath])
+	assert.True(t, foundMethods[http.MethodPost])
+	assert.True(t, foundMethods[http.MethodGet])
 
 	for _, config := range configs {
-		if config.EndpointID.Path == "/api/v1/test" {
-			assert.NotEqual(t, "GET", config.EndpointID.HTTPMethod)
+		if config.EndpointID.Path == testPath {
+			assert.NotEqual(t, http.MethodGet, config.EndpointID.HTTPMethod)
 		}
 	}
 }
@@ -416,7 +436,7 @@ func TestDeleteAllEndpoints(t *testing.T) {
 		{
 			EndpointID: EndpointID{
 				Path:       "/api/v1/test1",
-				HTTPMethod: "GET",
+				HTTPMethod: http.MethodGet,
 			},
 			ResponseBody:       "{\"id\":1}",
 			ResponseStatusCode: 200,
@@ -424,7 +444,7 @@ func TestDeleteAllEndpoints(t *testing.T) {
 		{
 			EndpointID: EndpointID{
 				Path:       "/api/v1/test2",
-				HTTPMethod: "POST",
+				HTTPMethod: http.MethodPost,
 			},
 			ResponseBody:       "{\"id\":2}",
 			ResponseStatusCode: 201,
@@ -449,28 +469,28 @@ func TestMatchEndpoint(t *testing.T) {
 	endpoints := []EndpointConfiguration{
 		{
 			EndpointID: EndpointID{
-				Path:               "/api/v1/users",
-				HTTPMethod:         "GET",
-				QueryParamsToMatch: map[string]string{"page": "1", "limit": "10"},
-				HeadersToMatch:     map[string]string{"X-API-Key": "key1"},
+				Path:               usersPath,
+				HTTPMethod:         http.MethodGet,
+				QueryParamsToMatch: map[string]string{pageParam: "1", limitParam: "10"},
+				HeadersToMatch:     map[string]string{authKeyHeader: apiKey1},
 			},
 			ResponseBody:       "{\"users\":[{\"id\":1}]}",
 			ResponseStatusCode: 200,
 		},
 		{
 			EndpointID: EndpointID{
-				Path:               "/api/v1/users",
-				HTTPMethod:         "GET",
-				QueryParamsToMatch: map[string]string{"page": "2", "limit": "20"},
-				HeadersToMatch:     map[string]string{"X-API-Key": "key2"},
+				Path:               usersPath,
+				HTTPMethod:         http.MethodGet,
+				QueryParamsToMatch: map[string]string{pageParam: "2", limitParam: "20"},
+				HeadersToMatch:     map[string]string{authKeyHeader: apiKey2},
 			},
 			ResponseBody:       "{\"users\":[{\"id\":2}]}",
 			ResponseStatusCode: 200,
 		},
 		{
 			EndpointID: EndpointID{
-				Path:               "/api/v1/products",
-				HTTPMethod:         "GET",
+				Path:               productsPath,
+				HTTPMethod:         http.MethodGet,
 				QueryParamsToMatch: map[string]string{"category": "electronics"},
 				HeadersToMatch:     map[string]string{},
 			},
@@ -494,74 +514,74 @@ func TestMatchEndpoint(t *testing.T) {
 		{
 			name: "exact match for first endpoint",
 			request: EndpointID{
-				Path:               "/api/v1/users",
-				HTTPMethod:         "GET",
-				QueryParamsToMatch: map[string]string{"page": "1", "limit": "10"},
-				HeadersToMatch:     map[string]string{"X-API-Key": "key1"},
+				Path:               usersPath,
+				HTTPMethod:         http.MethodGet,
+				QueryParamsToMatch: map[string]string{pageParam: "1", limitParam: "10"},
+				HeadersToMatch:     map[string]string{authKeyHeader: apiKey1},
 			},
 			expectError:  false,
-			expectedPath: "/api/v1/users",
+			expectedPath: usersPath,
 		},
 		{
 			name: "exact match for second endpoint",
 			request: EndpointID{
-				Path:               "/api/v1/users",
-				HTTPMethod:         "GET",
-				QueryParamsToMatch: map[string]string{"page": "2", "limit": "20"},
-				HeadersToMatch:     map[string]string{"X-API-Key": "key2"},
+				Path:               usersPath,
+				HTTPMethod:         http.MethodGet,
+				QueryParamsToMatch: map[string]string{pageParam: "2", limitParam: "20"},
+				HeadersToMatch:     map[string]string{authKeyHeader: apiKey2},
 			},
 			expectError:  false,
-			expectedPath: "/api/v1/users",
+			expectedPath: usersPath,
 		},
 		{
 			name: "partial match - more headers in request than endpoint",
 			request: EndpointID{
-				Path:               "/api/v1/users",
-				HTTPMethod:         "GET",
-				QueryParamsToMatch: map[string]string{"page": "1", "limit": "10"},
-				HeadersToMatch:     map[string]string{"X-API-Key": "key1", "X-Extra": "value"},
+				Path:               usersPath,
+				HTTPMethod:         http.MethodGet,
+				QueryParamsToMatch: map[string]string{pageParam: "1", limitParam: "10"},
+				HeadersToMatch:     map[string]string{authKeyHeader: apiKey1, "X-Extra": "value"},
 			},
 			expectError:  false,
-			expectedPath: "/api/v1/users",
+			expectedPath: usersPath,
 		},
 		{
 			name: "partial match - more query params in request than endpoint",
 			request: EndpointID{
-				Path:               "/api/v1/users",
-				HTTPMethod:         "GET",
-				QueryParamsToMatch: map[string]string{"page": "1", "limit": "10", "sort": "asc"},
-				HeadersToMatch:     map[string]string{"X-API-Key": "key1"},
+				Path:               usersPath,
+				HTTPMethod:         http.MethodGet,
+				QueryParamsToMatch: map[string]string{pageParam: "1", limitParam: "10", sortParam: "asc"},
+				HeadersToMatch:     map[string]string{authKeyHeader: apiKey1},
 			},
 			expectError:  false,
-			expectedPath: "/api/v1/users",
+			expectedPath: usersPath,
 		},
 		{
 			name: "match with no query params or headers",
 			request: EndpointID{
-				Path:               "/api/v1/products",
-				HTTPMethod:         "GET",
+				Path:               productsPath,
+				HTTPMethod:         http.MethodGet,
 				QueryParamsToMatch: map[string]string{},
 				HeadersToMatch:     map[string]string{},
 			},
 			expectError:  false,
-			expectedPath: "/api/v1/products",
+			expectedPath: productsPath,
 		},
 		{
 			name: "match with some query params",
 			request: EndpointID{
-				Path:               "/api/v1/products",
-				HTTPMethod:         "GET",
+				Path:               productsPath,
+				HTTPMethod:         http.MethodGet,
 				QueryParamsToMatch: map[string]string{"category": "electronics"},
 				HeadersToMatch:     map[string]string{},
 			},
 			expectError:  false,
-			expectedPath: "/api/v1/products",
+			expectedPath: productsPath,
 		},
 		{
 			name: "no match - wrong path",
 			request: EndpointID{
 				Path:               "/api/v1/nonexistent",
-				HTTPMethod:         "GET",
+				HTTPMethod:         http.MethodGet,
 				QueryParamsToMatch: map[string]string{},
 				HeadersToMatch:     map[string]string{},
 			},
@@ -571,8 +591,8 @@ func TestMatchEndpoint(t *testing.T) {
 		{
 			name: "no match - wrong method",
 			request: EndpointID{
-				Path:               "/api/v1/users",
-				HTTPMethod:         "POST",
+				Path:               usersPath,
+				HTTPMethod:         http.MethodPost,
 				QueryParamsToMatch: map[string]string{},
 				HeadersToMatch:     map[string]string{},
 			},
@@ -609,20 +629,20 @@ func TestMatchEndpoint(t *testing.T) {
 	ambiguousEndpoints := []EndpointConfiguration{
 		{
 			EndpointID: EndpointID{
-				Path:               "/api/v1/users",
-				HTTPMethod:         "GET",
-				QueryParamsToMatch: map[string]string{"page": "1"},
-				HeadersToMatch:     map[string]string{"X-API-Key": "key1"},
+				Path:               usersPath,
+				HTTPMethod:         http.MethodGet,
+				QueryParamsToMatch: map[string]string{pageParam: "1"},
+				HeadersToMatch:     map[string]string{authKeyHeader: apiKey1},
 			},
 			ResponseBody:       "{\"users\":[{\"id\":1}]}",
 			ResponseStatusCode: 200,
 		},
 		{
 			EndpointID: EndpointID{
-				Path:               "/api/v1/users",
-				HTTPMethod:         "GET",
-				QueryParamsToMatch: map[string]string{"page": "1"},
-				HeadersToMatch:     map[string]string{"X-API-Key": "key1"},
+				Path:               usersPath,
+				HTTPMethod:         http.MethodGet,
+				QueryParamsToMatch: map[string]string{pageParam: "1"},
+				HeadersToMatch:     map[string]string{authKeyHeader: apiKey1},
 			},
 			ResponseBody:       "{\"users\":[{\"id\":2}]}",
 			ResponseStatusCode: 200,
@@ -649,17 +669,17 @@ func TestCalculateMatch(t *testing.T) {
 			name: "exact match for all headers and query params",
 			endpoint: EndpointConfiguration{
 				EndpointID: EndpointID{
-					Path:               "/api/v1/users",
-					HTTPMethod:         "GET",
-					QueryParamsToMatch: map[string]string{"page": "1", "limit": "10"},
-					HeadersToMatch:     map[string]string{"X-API-Key": "key1", "Accept": "application/json"},
+					Path:               usersPath,
+					HTTPMethod:         http.MethodGet,
+					QueryParamsToMatch: map[string]string{pageParam: "1", limitParam: "10"},
+					HeadersToMatch:     map[string]string{authKeyHeader: apiKey1, acceptHeader: jsonContentType},
 				},
 			},
 			requestToMatch: EndpointID{
-				Path:               "/api/v1/users",
-				HTTPMethod:         "GET",
-				QueryParamsToMatch: map[string]string{"page": "1", "limit": "10"},
-				HeadersToMatch:     map[string]string{"X-API-Key": "key1", "Accept": "application/json"},
+				Path:               usersPath,
+				HTTPMethod:         http.MethodGet,
+				QueryParamsToMatch: map[string]string{pageParam: "1", limitParam: "10"},
+				HeadersToMatch:     map[string]string{authKeyHeader: apiKey1, acceptHeader: jsonContentType},
 			},
 			expectedScore: 4, // 2 query params + 2 headers
 		},
@@ -667,17 +687,17 @@ func TestCalculateMatch(t *testing.T) {
 			name: "partial match - only some headers match",
 			endpoint: EndpointConfiguration{
 				EndpointID: EndpointID{
-					Path:               "/api/v1/users",
-					HTTPMethod:         "GET",
-					QueryParamsToMatch: map[string]string{"page": "1", "limit": "10"},
-					HeadersToMatch:     map[string]string{"X-API-Key": "key1", "Accept": "application/json"},
+					Path:               usersPath,
+					HTTPMethod:         http.MethodGet,
+					QueryParamsToMatch: map[string]string{pageParam: "1", limitParam: "10"},
+					HeadersToMatch:     map[string]string{authKeyHeader: apiKey1, acceptHeader: jsonContentType},
 				},
 			},
 			requestToMatch: EndpointID{
-				Path:               "/api/v1/users",
-				HTTPMethod:         "GET",
-				QueryParamsToMatch: map[string]string{"page": "1", "limit": "10"},
-				HeadersToMatch:     map[string]string{"X-API-Key": "key1", "Accept": "text/html"},
+				Path:               usersPath,
+				HTTPMethod:         http.MethodGet,
+				QueryParamsToMatch: map[string]string{pageParam: "1", limitParam: "10"},
+				HeadersToMatch:     map[string]string{authKeyHeader: apiKey1, acceptHeader: "text/html"},
 			},
 			expectedScore: 3, // 2 query params + 1 header
 		},
@@ -685,17 +705,17 @@ func TestCalculateMatch(t *testing.T) {
 			name: "partial match - only some query params match",
 			endpoint: EndpointConfiguration{
 				EndpointID: EndpointID{
-					Path:               "/api/v1/users",
-					HTTPMethod:         "GET",
-					QueryParamsToMatch: map[string]string{"page": "1", "limit": "10"},
-					HeadersToMatch:     map[string]string{"X-API-Key": "key1"},
+					Path:               usersPath,
+					HTTPMethod:         http.MethodGet,
+					QueryParamsToMatch: map[string]string{pageParam: "1", limitParam: "10"},
+					HeadersToMatch:     map[string]string{authKeyHeader: apiKey1},
 				},
 			},
 			requestToMatch: EndpointID{
-				Path:               "/api/v1/users",
-				HTTPMethod:         "GET",
-				QueryParamsToMatch: map[string]string{"page": "1", "limit": "20"},
-				HeadersToMatch:     map[string]string{"X-API-Key": "key1"},
+				Path:               usersPath,
+				HTTPMethod:         http.MethodGet,
+				QueryParamsToMatch: map[string]string{pageParam: "1", limitParam: "20"},
+				HeadersToMatch:     map[string]string{authKeyHeader: apiKey1},
 			},
 			expectedScore: 2, // 1 query param + 1 header
 		},
@@ -703,17 +723,17 @@ func TestCalculateMatch(t *testing.T) {
 			name: "additional params in request don't affect score",
 			endpoint: EndpointConfiguration{
 				EndpointID: EndpointID{
-					Path:               "/api/v1/users",
-					HTTPMethod:         "GET",
-					QueryParamsToMatch: map[string]string{"page": "1"},
-					HeadersToMatch:     map[string]string{"X-API-Key": "key1"},
+					Path:               usersPath,
+					HTTPMethod:         http.MethodGet,
+					QueryParamsToMatch: map[string]string{pageParam: "1"},
+					HeadersToMatch:     map[string]string{authKeyHeader: apiKey1},
 				},
 			},
 			requestToMatch: EndpointID{
-				Path:               "/api/v1/users",
-				HTTPMethod:         "GET",
-				QueryParamsToMatch: map[string]string{"page": "1", "limit": "10", "sort": "desc"},
-				HeadersToMatch:     map[string]string{"X-API-Key": "key1", "Accept": "application/json"},
+				Path:               usersPath,
+				HTTPMethod:         http.MethodGet,
+				QueryParamsToMatch: map[string]string{pageParam: "1", limitParam: "10", sortParam: "desc"},
+				HeadersToMatch:     map[string]string{authKeyHeader: apiKey1, acceptHeader: jsonContentType},
 			},
 			expectedScore: 2, // 1 query param + 1 header
 		},
@@ -721,17 +741,17 @@ func TestCalculateMatch(t *testing.T) {
 			name: "no matches",
 			endpoint: EndpointConfiguration{
 				EndpointID: EndpointID{
-					Path:               "/api/v1/users",
-					HTTPMethod:         "GET",
-					QueryParamsToMatch: map[string]string{"page": "1", "limit": "10"},
-					HeadersToMatch:     map[string]string{"X-API-Key": "key1"},
+					Path:               usersPath,
+					HTTPMethod:         http.MethodGet,
+					QueryParamsToMatch: map[string]string{pageParam: "1", limitParam: "10"},
+					HeadersToMatch:     map[string]string{authKeyHeader: apiKey1},
 				},
 			},
 			requestToMatch: EndpointID{
-				Path:               "/api/v1/users",
-				HTTPMethod:         "GET",
-				QueryParamsToMatch: map[string]string{"page": "2", "limit": "20"},
-				HeadersToMatch:     map[string]string{"X-API-Key": "key2"},
+				Path:               usersPath,
+				HTTPMethod:         http.MethodGet,
+				QueryParamsToMatch: map[string]string{pageParam: "2", limitParam: "20"},
+				HeadersToMatch:     map[string]string{authKeyHeader: apiKey2},
 			},
 			expectedScore: 0,
 		},
@@ -739,15 +759,15 @@ func TestCalculateMatch(t *testing.T) {
 			name: "empty headers and query params",
 			endpoint: EndpointConfiguration{
 				EndpointID: EndpointID{
-					Path:               "/api/v1/users",
-					HTTPMethod:         "GET",
+					Path:               usersPath,
+					HTTPMethod:         http.MethodGet,
 					QueryParamsToMatch: map[string]string{},
 					HeadersToMatch:     map[string]string{},
 				},
 			},
 			requestToMatch: EndpointID{
-				Path:               "/api/v1/users",
-				HTTPMethod:         "GET",
+				Path:               usersPath,
+				HTTPMethod:         http.MethodGet,
 				QueryParamsToMatch: map[string]string{},
 				HeadersToMatch:     map[string]string{},
 			},

@@ -1,0 +1,34 @@
+---
+name: release
+"on":
+  push:
+    branches:
+      - main
+concurrency:
+  cancel-in-progress: false
+  group: release
+permissions:
+  contents: read
+jobs:
+  mcvs-general-action:
+    permissions:
+      actions: write
+      contents: write
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - id: release
+        # yamllint disable-line rule:line-length
+        uses: schubergphilis/mcvs-general-action@96298a5c109d08a0dfd9047963e01e2441421a3f # v0.11.1
+        with:
+          auto-release: "true"
+      # A tag pushed with GITHUB_TOKEN starts no push run, so dispatch the
+      # workflows that publish the images on the new tag.
+      - if: steps.release.outputs.tag != ''
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          gh workflow run docker.yml --ref "${TAG}"
+          gh workflow run mcvs-registry.yml --ref "${TAG}"
