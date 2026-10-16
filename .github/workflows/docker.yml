@@ -19,13 +19,15 @@ jobs:
           - oktamock
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       # yamllint disable-line rule:line-length
-      - uses: schubergphilis/mcvs-docker-action@ed30e5db799a279ec1062bc3ff237462c7ae797e # v0.12.0
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      # yamllint disable-line rule:line-length
+      - uses: schubergphilis/mcvs-docker-action@e0d519535bd0bc2380e69ad0e1ce0bfa063c3e7f # v0.13.2
         with:
           build-args: ${{ matrix.build-args }}
           # yamllint disable rule:line-length
           dockle-accept-key: APPLICATION,curl,HOME,libcrypto3,libssl3,PATH
           # yamllint enable rule:line-length
           images: ghcr.io/${{ github.repository }}/${{ matrix.build-args }}
+          platforms: linux/amd64
           token: ${{ secrets.GITHUB_TOKEN }}

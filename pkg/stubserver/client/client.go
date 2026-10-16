@@ -1,4 +1,4 @@
-// client package provides a client for interacting with a stub server.
+// Package client provides a client for interacting with a stub server.
 package client
 
 import (

@@ -6,6 +6,7 @@ import (
 	"crypto/rsa"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"net/http"
 	"time"
 
@@ -16,7 +17,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// ErrUnsupportedSigningMethod represents an error when an unsupported signing method is provided.
+// logFieldHTTPStatusCode is the log field that holds the HTTP status code of a failed request.
+const logFieldHTTPStatusCode = "httpStatusCode"
+
+// UnsupportedSigningMethodError represents an error when an unsupported signing method is provided.
 type UnsupportedSigningMethodError struct {
 	ProvidedMethod string
 }
@@ -126,7 +130,7 @@ type OktaMockServer struct {
 
 // CustomClaimsRequest represents the JSON structure for requests that include custom claims for JWT tokens.
 type CustomClaimsRequest struct {
-	CustomClaims map[string]interface{} `json:"custom_claims"`
+	CustomClaims map[string]any `json:"custom_claims"`
 }
 
 // NewOktaMockServer returns a new OktaMockServer.
@@ -171,9 +175,7 @@ func (o *OktaMockServer) handleGetValidJWT(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Add custom claims
-	for key, value := range claimsReq.CustomClaims {
-		claims[key] = value
-	}
+	maps.Copy(claims, claimsReq.CustomClaims)
 
 	// Create a new token with these claims
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
@@ -193,10 +195,10 @@ func (o *OktaMockServer) handleGetValidJWT(w http.ResponseWriter, r *http.Reques
 		AccessToken: res,
 	}
 
-	b, err := json.Marshal(tokenResponse)
+	b, err := json.Marshal(tokenResponse) //nolint:gosec // returning an OAuth access token is the purpose of this mock endpoint
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.WithError(err).WithFields(log.Fields{"httpStatusCode": http.StatusInternalServerError}).Error("unable to generate the signed JWT string")
+		log.WithError(err).WithFields(log.Fields{logFieldHTTPStatusCode: http.StatusInternalServerError}).Error("unable to generate the signed JWT string")
 
 		return
 	}
@@ -215,7 +217,7 @@ func (o *OktaMockServer) handleGetJWKS(w http.ResponseWriter, _ *http.Request) {
 	b, err := json.Marshal(resp)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.WithError(err).WithFields(log.Fields{"httpStatusCode": http.StatusInternalServerError}).Error("unable to handle get JWKS")
+		log.WithError(err).WithFields(log.Fields{logFieldHTTPStatusCode: http.StatusInternalServerError}).Error("unable to handle get JWKS")
 
 		return
 	}
@@ -234,7 +236,7 @@ func (o *OktaMockServer) handleOpenIDConfig(w http.ResponseWriter, _ *http.Reque
 	b, err := json.Marshal(resp)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.WithError(err).WithFields(log.Fields{"httpStatusCode": http.StatusInternalServerError}).Error("unable to handle openID config")
+		log.WithError(err).WithFields(log.Fields{logFieldHTTPStatusCode: http.StatusInternalServerError}).Error("unable to handle openID config")
 
 		return
 	}
