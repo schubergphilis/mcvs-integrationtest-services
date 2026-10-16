@@ -48,3 +48,86 @@ ignore:
     package:
       name: github.com/quic-go/quic-go
       version: v0.54.0
+  # Windows-only; the fix needs docker/cli v29, which ory/dockertest/v3 does
+  # not build with.
+  - vulnerability: GHSA-p436-gjf2-799p
+    package:
+      name: github.com/docker/cli
+      version: v27.4.1+incompatible
+  # Docker daemon only and no fixed github.com/docker/docker; it is used as a
+  # client through ory/dockertest/v3.
+  - vulnerability: GHSA-rg2x-37c3-w2rh
+    package:
+      name: github.com/docker/docker
+      version: v28.0.1+incompatible
+  - vulnerability: GHSA-x86f-5xw2-fm2r
+    package:
+      name: github.com/docker/docker
+      version: v28.0.1+incompatible
+  - vulnerability: GO-2026-4887
+    package:
+      name: github.com/docker/docker
+      version: v28.0.1+incompatible
+  # Built into the registry binary of the upstream registry:3.1.2 image,
+  # the latest release; scoped to these versions so that they lapse once
+  # upstream ships a newer Go and golang.org/x/net.
+  - vulnerability: GO-2026-6603
+    package:
+      name: golang.org/x/net
+      version: v0.59.0
+  - vulnerability: GO-2026-6610
+    package:
+      name: golang.org/x/net
+      version: v0.59.0
+  - vulnerability: GO-2026-6611
+    package:
+      name: golang.org/x/net
+      version: v0.59.0
+  - vulnerability: GO-2026-6612
+    package:
+      name: golang.org/x/net
+      version: v0.59.0
+  - vulnerability: GO-2026-6617
+    package:
+      name: golang.org/x/net
+      version: v0.59.0
+  - vulnerability: GO-2026-6603
+    package:
+      name: stdlib
+      version: go1.26.8
+  - vulnerability: GO-2026-6605
+    package:
+      name: stdlib
+      version: go1.26.8
+  - vulnerability: GO-2026-6607
+    package:
+      name: stdlib
+      version: go1.26.8
+  - vulnerability: GO-2026-6608
+    package:
+      name: stdlib
+      version: go1.26.8
+  - vulnerability: GO-2026-6609
+    package:
+      name: stdlib
+      version: go1.26.8
+  - vulnerability: GO-2026-6610
+    package:
+      name: stdlib
+      version: go1.26.8
+  - vulnerability: GO-2026-6611
+    package:
+      name: stdlib
+      version: go1.26.8
+  - vulnerability: GO-2026-6612
+    package:
+      name: stdlib
+      version: go1.26.8
+  - vulnerability: GO-2026-6613
+    package:
+      name: stdlib
+      version: go1.26.8
+  - vulnerability: GO-2026-6617
+    package:
+      name: stdlib
+      version: go1.26.8

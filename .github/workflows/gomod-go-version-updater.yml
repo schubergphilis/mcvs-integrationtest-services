@@ -11,4 +11,5 @@ jobs:
   gomod-go-version-updater-action:
     runs-on: ubuntu-22.04
     steps:
-      - uses: schubergphilis/gomod-go-version-updater-action@v0.3.5
+      # yamllint disable-line rule:line-length
+      - uses: schubergphilis/gomod-go-version-updater-action@fea6654fb5965dcbed42401be0610806d0a4462d # v0.3.11
