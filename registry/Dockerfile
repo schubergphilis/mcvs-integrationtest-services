@@ -15,9 +15,11 @@ COPY backup-registry /var/lib/registry
 
 # Copying the filesystem into a single layer prevents the packages that
 # apk upgrade replaces from being stored twice, which Dive fails on. The
-# settings below repeat those of the registry base image.
+# settings below repeat those of the registry base image, which is why DL3067
+# is ignored.
 FROM scratch
 ARG APPLICATION
+# hadolint ignore=DL3067
 COPY --from=registry / /
 ENV OTEL_TRACES_EXPORTER=none \
     PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
