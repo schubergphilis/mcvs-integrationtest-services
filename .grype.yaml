@@ -48,3 +48,23 @@ ignore:
     package:
       name: github.com/quic-go/quic-go
       version: v0.54.0
+  # Windows-only; the fix needs docker/cli v29, which ory/dockertest/v3 does
+  # not build with.
+  - vulnerability: GHSA-p436-gjf2-799p
+    package:
+      name: github.com/docker/cli
+      version: v27.4.1+incompatible
+  # Docker daemon only and no fixed github.com/docker/docker; it is used as a
+  # client through ory/dockertest/v3.
+  - vulnerability: GHSA-rg2x-37c3-w2rh
+    package:
+      name: github.com/docker/docker
+      version: v28.0.1+incompatible
+  - vulnerability: GHSA-x86f-5xw2-fm2r
+    package:
+      name: github.com/docker/docker
+      version: v28.0.1+incompatible
+  - vulnerability: GO-2026-4887
+    package:
+      name: github.com/docker/docker
+      version: v28.0.1+incompatible

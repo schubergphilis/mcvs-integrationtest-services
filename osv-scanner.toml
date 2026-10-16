@@ -1,4 +1,34 @@
 [[IgnoredVulns]]
-id = "GO-2025-4098"
-ignoreUntil = 2025-12-20
-reason = "Waiting for upstream fix: github.com/opencontainers/runc"
+id = "GO-2026-4610"
+ignoreUntil = 2027-01-16
+reason = "Windows-only; the fix needs docker/cli v29, which ory/dockertest/v3 does not build with"
+
+[[IgnoredVulns]]
+id = "GO-2026-4883"
+ignoreUntil = 2027-01-16
+reason = "Docker daemon only, no fixed github.com/docker/docker; used as a client through ory/dockertest/v3"
+
+[[IgnoredVulns]]
+id = "GO-2026-4887"
+ignoreUntil = 2027-01-16
+reason = "Docker daemon only, no fixed github.com/docker/docker; used as a client through ory/dockertest/v3"
+
+[[IgnoredVulns]]
+id = "GO-2026-5617"
+ignoreUntil = 2027-01-16
+reason = "Docker daemon only, no fixed github.com/docker/docker; used as a client through ory/dockertest/v3"
+
+[[IgnoredVulns]]
+id = "GO-2026-5668"
+ignoreUntil = 2027-01-16
+reason = "Docker daemon only, no fixed github.com/docker/docker; used as a client through ory/dockertest/v3"
+
+[[IgnoredVulns]]
+id = "GO-2026-5746"
+ignoreUntil = 2027-01-16
+reason = "Docker daemon only, no fixed github.com/docker/docker; used as a client through ory/dockertest/v3"
+
+[[IgnoredVulns]]
+id = "GO-2026-5932"
+ignoreUntil = 2027-01-16
+reason = "Only affects golang.org/x/crypto/openpgp, which is not used; no fixed version"

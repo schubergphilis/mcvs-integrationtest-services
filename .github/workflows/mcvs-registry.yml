@@ -19,7 +19,7 @@ env:
   IMAGE_TAG: ${{ github.ref_name }}
   IMAGE_MANIFEST_LIST: nginx/nginx:1.27.0-alpine
   IMAGE_MANIFEST_SINGLE: nginx/nginx:1.27.0-alpine-slim-amd64
-  REGCTL_VERSION: v0.8.0
+  REGCTL_VERSION: v0.11.6
   REGISTRY_LOCAL: localhost:5000
   REGISTRY_REMOTE: public.ecr.aws
 jobs:
@@ -31,9 +31,11 @@ jobs:
           - mcvs-registry
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6.0.1
+        # yamllint disable-line rule:line-length
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
       - name: Install regctl
-        uses: regclient/actions/regctl-installer@main
+        # yamllint disable-line rule:line-length
+        uses: regclient/actions/regctl-installer@dd58ad94f76adb73d8ac1bf75ed25f01545d5b32 # v0.2.0
         with:
           release: ${{ env.REGCTL_VERSION }}
       - name: Create registry backup directory
@@ -44,7 +46,7 @@ jobs:
           #!/bin/bash
 
           extract_dockerfile_version() {
-            local version=$(grep '^FROM' "$1" | awk -F: '{print $2}')
+            local version=$(grep -m 1 '^FROM' "$1" | awk -F'[:@]' '{print $2}')
             echo "$version"
           }
           dockerfile_path=./registry/Dockerfile
@@ -81,11 +83,13 @@ jobs:
 
           # clean up the registry container
           docker rm -f mcvs-registry-tmp
-      - uses: schubergphilis/mcvs-docker-action@v0.8.3
+      # yamllint disable-line rule:line-length
+      - uses: schubergphilis/mcvs-docker-action@e0d519535bd0bc2380e69ad0e1ce0bfa063c3e7f # v0.13.2
         with:
           build-args: ${{ matrix.build-args }}
           context: ${{ env.DOCKERFILE_CONTEXT }}
-          dockle-accept-key: APPLICATION,apkArch,arch,sha256,version
+          # yamllint disable-line rule:line-length
+          dockle-accept-key: APPLICATION,apkArch,arch,OTEL_TRACES_EXPORTER,sha256,version
           images: ${{ env.IMAGE_REPO }}/${{ matrix.build-args }}
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Get new registry catalog
