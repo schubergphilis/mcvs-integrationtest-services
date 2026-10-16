@@ -89,7 +89,7 @@ jobs:
           build-args: ${{ matrix.build-args }}
           context: ${{ env.DOCKERFILE_CONTEXT }}
           # yamllint disable-line rule:line-length
-          dockle-accept-key: APPLICATION,apkArch,arch,OTEL_TRACES_EXPORTER,sha256,version
+          dockle-accept-key: APPLICATION,apkArch,arch,OTEL_TRACES_EXPORTER,PATH,sha256,version
           images: ${{ env.IMAGE_REPO }}/${{ matrix.build-args }}
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Get new registry catalog
