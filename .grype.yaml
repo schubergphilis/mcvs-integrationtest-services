@@ -68,3 +68,66 @@ ignore:
     package:
       name: github.com/docker/docker
       version: v28.0.1+incompatible
+  # Built into the registry binary of the upstream registry:3.1.2 image,
+  # the latest release; scoped to these versions so that they lapse once
+  # upstream ships a newer Go and golang.org/x/net.
+  - vulnerability: GO-2026-6603
+    package:
+      name: golang.org/x/net
+      version: v0.59.0
+  - vulnerability: GO-2026-6610
+    package:
+      name: golang.org/x/net
+      version: v0.59.0
+  - vulnerability: GO-2026-6611
+    package:
+      name: golang.org/x/net
+      version: v0.59.0
+  - vulnerability: GO-2026-6612
+    package:
+      name: golang.org/x/net
+      version: v0.59.0
+  - vulnerability: GO-2026-6617
+    package:
+      name: golang.org/x/net
+      version: v0.59.0
+  - vulnerability: GO-2026-6603
+    package:
+      name: stdlib
+      version: go1.26.8
+  - vulnerability: GO-2026-6605
+    package:
+      name: stdlib
+      version: go1.26.8
+  - vulnerability: GO-2026-6607
+    package:
+      name: stdlib
+      version: go1.26.8
+  - vulnerability: GO-2026-6608
+    package:
+      name: stdlib
+      version: go1.26.8
+  - vulnerability: GO-2026-6609
+    package:
+      name: stdlib
+      version: go1.26.8
+  - vulnerability: GO-2026-6610
+    package:
+      name: stdlib
+      version: go1.26.8
+  - vulnerability: GO-2026-6611
+    package:
+      name: stdlib
+      version: go1.26.8
+  - vulnerability: GO-2026-6612
+    package:
+      name: stdlib
+      version: go1.26.8
+  - vulnerability: GO-2026-6613
+    package:
+      name: stdlib
+      version: go1.26.8
+  - vulnerability: GO-2026-6617
+    package:
+      name: stdlib
+      version: go1.26.8
