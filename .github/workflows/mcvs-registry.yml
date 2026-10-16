@@ -32,7 +32,7 @@ jobs:
     steps:
       - name: Checkout repository
         # yamllint disable-line rule:line-length
-        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install regctl
         # yamllint disable-line rule:line-length
         uses: regclient/actions/regctl-installer@dd58ad94f76adb73d8ac1bf75ed25f01545d5b32 # v0.2.0

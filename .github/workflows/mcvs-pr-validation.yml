@@ -15,6 +15,6 @@ jobs:
   MCVS-PR-validation-action:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       # yamllint disable-line rule:line-length
-      - uses: schubergphilis/mcvs-pr-validation-action@12587186ddd0cf2a2acd20495f3b31262af1f610 # v0.2.1
+      - uses: schubergphilis/mcvs-pr-validation-action@6f153c01301ab2f92336781173b7f3a796de5f3e # v0.2.2
