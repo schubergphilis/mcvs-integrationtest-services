@@ -9,6 +9,8 @@ name: docker-mcvs-registry
     paths:
       - "registry/**"
       - ".github/workflows/mcvs-registry.yml"
+  # dispatched by release.yml on the tags that auto-release creates
+  workflow_dispatch:
 permissions:
   contents: read
   packages: write
@@ -84,7 +86,7 @@ jobs:
           # clean up the registry container
           docker rm -f mcvs-registry-tmp
       # yamllint disable-line rule:line-length
-      - uses: schubergphilis/mcvs-docker-action@e0d519535bd0bc2380e69ad0e1ce0bfa063c3e7f # v0.13.2
+      - uses: schubergphilis/mcvs-docker-action@c9dfc78bd277dcabbe8719db6e1fc58b2eb673e1 # v0.14.0
         with:
           build-args: ${{ matrix.build-args }}
           context: ${{ env.DOCKERFILE_CONTEXT }}
@@ -93,7 +95,10 @@ jobs:
           images: ${{ env.IMAGE_REPO }}/${{ matrix.build-args }}
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Get new registry catalog
-        if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: |
+          (github.event_name == 'push' ||
+            github.event_name == 'workflow_dispatch') &&
+          startsWith(github.ref, 'refs/tags/')
         shell: bash
         run: |
           #!/bin/bash
