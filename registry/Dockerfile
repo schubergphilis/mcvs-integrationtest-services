@@ -1,4 +1,4 @@
-FROM registry:3.1.2@sha256:ddf754342cfc8acc51a56d5d0ab6af06826461864460636d8bd5c546dab2a7b8
+FROM registry:3.1.2@sha256:ddf754342cfc8acc51a56d5d0ab6af06826461864460636d8bd5c546dab2a7b8 AS registry
 ARG APPLICATION
 RUN apk update && \
     apk upgrade && \
@@ -12,4 +12,17 @@ RUN apk update && \
 COPY config-example.yml /etc/docker/registry/config.yml
 COPY config-example.yml /etc/distribution/config.yml
 COPY backup-registry /var/lib/registry
+
+# Copying the filesystem into a single layer prevents the packages that
+# apk upgrade replaces from being stored twice, which Dive fails on. The
+# settings below repeat those of the registry base image.
+FROM scratch
+ARG APPLICATION
+COPY --from=registry / /
+ENV OTEL_TRACES_EXPORTER=none \
+    PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+VOLUME ["/var/lib/registry"]
+EXPOSE 5000
 USER ${APPLICATION}
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["/etc/distribution/config.yml"]
