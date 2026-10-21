@@ -3,6 +3,7 @@ name: gomod-go-version-updater-action
 "on":
   schedule:
     - cron: "42 6 * * *"
+  workflow_dispatch:
 permissions:
   contents: write
   pull-requests: write
