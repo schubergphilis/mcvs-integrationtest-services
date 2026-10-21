@@ -24,7 +24,7 @@ env:
   REGISTRY_REMOTE: public.ecr.aws
 jobs:
   build-and-publish:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-26.04
     strategy:
       matrix:
         build-args:

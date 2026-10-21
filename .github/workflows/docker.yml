@@ -17,7 +17,7 @@ jobs:
           - mcvs-integrationtest-services
           - mcvs-stub-server
           - oktamock
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v6.0.1
       - uses: schubergphilis/mcvs-docker-action@v0.8.3
