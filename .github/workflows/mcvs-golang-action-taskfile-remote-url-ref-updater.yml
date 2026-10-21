@@ -8,7 +8,7 @@ permissions:
   pull-requests: write
 jobs:
   mcvs-golang-action-taskfile-remote-url-ref-updater:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-slim
     steps:
       # yamllint disable rule:line-length
       - uses: schubergphilis/mcvs-golang-action-taskfile-remote-url-ref-updater@v0.1.2
